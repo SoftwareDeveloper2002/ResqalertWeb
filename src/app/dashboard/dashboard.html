@@ -1,0 +1,97 @@
+<!-- Top Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary px-4 py-2 shadow-sm rounded-0">
+  <a class="navbar-brand fw-bold" href="/dashboard">
+  🚨 RESQALERT DASHBOARD - {{ role }}
+</a>
+
+
+  <div class="ms-auto d-flex align-items-center gap-3">
+    <div class="dropdown">
+      <button class="btn btn-light dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
+        Menu
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded">
+        <li><a class="dropdown-item" routerLink="/profile">Profile</a></li>
+        <li><a class="dropdown-item" routerLink="/settings">Settings</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="#">Help</a></li>
+      </ul>
+    </div>
+    <button class="btn btn-outline-light shadow-sm" (click)="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- Main Layout -->
+<div class="d-flex" style="min-height: 100vh; background-color: #f8f9fa;">
+  <!-- Sidebar -->
+  <aside class="bg-white border-end p-4 shadow-sm" style="width: 250px;">
+    <h6 class="fw-bold mb-4 text-primary">📂 Navigation</h6>
+    <ul class="nav flex-column gap-2">
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" [routerLink]="'/dashboard'" routerLinkActive="active">
+          🏠 Dashboard
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" [routerLink]="'/reports'" routerLinkActive="active">
+          📊 Reports
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Content Area -->
+  <main class="flex-fill p-4">
+    <h5 class="fw-bold text-primary mb-4">🏠 Overview</h5>
+
+   <!-- Analytics Overview Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card text-bg-primary shadow-sm rounded-3">
+      <div class="card-body text-center">
+        <h6 class="card-title">👥 Users Logged In</h6>
+        <h3 class="fw-bold">{{ totalUsers }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card text-bg-info shadow-sm rounded-3">
+      <div class="card-body text-center">
+        <h6 class="card-title">📦 Total Reports</h6>
+        <h3 class="fw-bold">{{ totalReports }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-2">
+    <div class="card text-bg-success shadow-sm rounded-3">
+      <div class="card-body text-center">
+        <h6 class="card-title">🟢 Rescued</h6>
+        <h3 class="fw-bold">{{ rescuedCount }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-2">
+    <div class="card text-bg-danger shadow-sm rounded-3">
+      <div class="card-body text-center">
+        <h6 class="card-title">🔴 Invalid</h6>
+        <h3 class="fw-bold">{{ invalidCount }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-2">
+    <div class="card text-bg-secondary shadow-sm rounded-3">
+      <div class="card-body text-center">
+        <h6 class="card-title">⚪ Others</h6>
+        <h3 class="fw-bold">{{ otherCount }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  </main>
+</div>

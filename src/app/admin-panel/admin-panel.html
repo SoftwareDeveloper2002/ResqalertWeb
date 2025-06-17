@@ -1,0 +1,31 @@
+<div class="page-wrapper">
+  <div class="background-mango"></div>
+
+  <div class="login-container">
+    <h2 class="title">ADMIN OF RESQALERT</h2>
+
+    <form (ngSubmit)="onLogin()">
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select id="role" [(ngModel)]="selectedRole" name="selectedRole" required>
+          <option value="" disabled selected>Select role</option>
+          <option value="PNP">PNP</option>
+          <option value="BFP">BFP</option>
+          <option value="MDRRMO">MDRRMO</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" [(ngModel)]="username" name="username" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" [(ngModel)]="password" name="password" required />
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+</div>
