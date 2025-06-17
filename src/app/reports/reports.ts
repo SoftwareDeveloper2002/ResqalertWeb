@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 
 @Component({
@@ -9,8 +9,7 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
   imports: [
     CommonModule,
     HttpClientModule,
-    RouterLink,
-    RouterLinkActive
+    RouterLink
   ],
   templateUrl: './reports.html',
   styleUrls: ['./reports.scss']
