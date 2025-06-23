@@ -3,13 +3,31 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 
+// Angular Material Modules
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+
+import { ImageDialogComponent } from './image-dialog.component';
+
 @Component({
   selector: 'app-reports',
   standalone: true,
   imports: [
     CommonModule,
     HttpClientModule,
-    RouterLink
+    RouterLink,
+
+    // Material Modules
+    MatIconModule,
+    MatCardModule,
+    MatChipsModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatDialogModule
   ],
   templateUrl: './reports.html',
   styleUrls: ['./reports.scss']
@@ -18,12 +36,14 @@ export class Reports implements OnInit {
   firebaseData: any[] = [];
   role: string = '';
 
-  constructor(private router: Router, private http: HttpClient) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
-    // Get role from local storage
     this.role = localStorage.getItem('role') || 'Unknown';
-
     const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json';
 
     this.http.get<any>(url).subscribe((response) => {
@@ -50,6 +70,13 @@ export class Reports implements OnInit {
 
   getGoogleMapsLink(lat: number, lng: number): string {
     return `https://www.google.com/maps?q=${lat},${lng}`;
+  }
+
+  openImageDialog(url: string): void {
+    this.dialog.open(ImageDialogComponent, {
+      data: { imageUrl: url },
+      panelClass: 'custom-dialog-container'
+    });
   }
 
   markAsResponding(itemId: string): void {

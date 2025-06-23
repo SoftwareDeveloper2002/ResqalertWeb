@@ -1,8 +1,8 @@
 <!-- Top Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary px-4 py-2 shadow-sm rounded-0">
   <a class="navbar-brand fw-bold" href="/dashboard">
-  🚨 RESQALERT DASHBOARD - {{ role }}
-</a>
+    🚨 RESQALERT DASHBOARD - {{ role }}
+  </a>
   <div class="ms-auto d-flex align-items-center gap-3">
     <div class="dropdown">
       <button class="btn btn-light dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
@@ -50,19 +50,15 @@
             <thead class="table-light">
               <tr class="text-center text-uppercase small">
                 <th>#</th>
-                <th>Type</th>
                 <th>Accident Type</th>
                 <th>Status</th>
-                <th>Location</th>
                 <th>Timestamp</th>
-                <th>Media</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of firebaseData; index as i" class="text-center">
                 <td>{{ i + 1 }}</td>
-                <td>{{ item.media_type }}</td>
                 <td>{{ item.accident_type || 'N/A' }}</td>
                 <td>
                   <span class="badge bg-success" *ngIf="item.status === 'Rescued'">{{ item.status }}</span>
@@ -71,31 +67,51 @@
                     {{ item.status }}
                   </span>
                 </td>
-                <td>
-                  <ng-container *ngIf="item.googleMapLink; else noLocation">
-                    <a [href]="item.googleMapLink" target="_blank" class="text-decoration-none">
-                      View Map<br><small>({{ item.latitude }}, {{ item.longitude }})</small>
-                    </a>
-                  </ng-container>
-                  <ng-template #noLocation>
-                    <span class="text-muted">Not available</span>
-                  </ng-template>
-                </td>
                 <td>{{ item.timestamp | date: 'medium' }}</td>
                 <td>
-                  <a *ngIf="item.media_url" [href]="item.media_url" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
-                  <span *ngIf="!item.media_url" class="text-muted">N/A</span>
-                </td>
-                <td>
-                  <div class="d-flex justify-content-center gap-2">
-                    <button class="btn btn-sm btn-warning" (click)="markAsResponding(item.id)">Responding</button>
-                    <button class="btn btn-sm btn-success" (click)="markAsRescued(item.id)">Rescued</button>
-                    <button class="btn btn-sm btn-danger" (click)="markAsInvalid(item.id)">Invalid</button>
+                  <div class="d-flex justify-content-center gap-2 flex-wrap">
+
+                    <!-- Location Icon -->
+                    <ng-container *ngIf="item.googleMapLink">
+                      <a [href]="item.googleMapLink" target="_blank" matTooltip="View Location">
+                        <button mat-mini-fab color="primary">
+                          <mat-icon>location_on</mat-icon>
+                        </button>
+                      </a>
+                    </ng-container>
+
+                    <!-- Media Dialog Button -->
+                    <ng-container *ngIf="item.media_url; else noMedia">
+                      <button mat-mini-fab color="accent" (click)="openImageDialog(item.media_url)" matTooltip="View Image">
+                        <mat-icon>image</mat-icon>
+                      </button>
+                    </ng-container>
+                    <ng-template #noMedia>
+                      <button mat-mini-fab disabled color="warn" matTooltip="No Media Available">
+                        <mat-icon>image_not_supported</mat-icon>
+                      </button>
+                    </ng-template>
+
+                    <!-- Responding -->
+                    <button mat-mini-fab style="background-color: #ff9800; color: white;" (click)="markAsResponding(item.id)" matTooltip="Mark as Responding">
+                      <mat-icon>notification_important</mat-icon>
+                    </button>
+
+                    <!-- Rescued -->
+                    <button mat-mini-fab style="background-color: #4caf50; color: white;" (click)="markAsRescued(item.id)" matTooltip="Mark as Rescued">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+
+                    <!-- Invalid -->
+                    <button mat-mini-fab style="background-color: #f44336; color: white;" (click)="markAsInvalid(item.id)" matTooltip="Mark as Invalid">
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+
                   </div>
                 </td>
               </tr>
               <tr *ngIf="firebaseData.length === 0">
-                <td colspan="8" class="text-center text-muted">No data available.</td>
+                <td colspan="5" class="text-center text-muted">No data available.</td>
               </tr>
             </tbody>
           </table>

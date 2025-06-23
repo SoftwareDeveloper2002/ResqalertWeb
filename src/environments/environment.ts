@@ -7,6 +7,7 @@ export const environment = {
     projectId: 'resqalert-22692',
     storageBucket: 'resqalert-22692.appspot.com',
     messagingSenderId: 'YOUR_SENDER_ID',
-    appId: '1:240921344477:android:6c287c0fa9adad9ce5de34'
+    appId: '1:240921344477:android:6c287c0fa9adad9ce5de34',
+    googleMapsApiKey: 'AIzaSyBdXIatQvjbeE8SG74Cv9FVashNDUiYyMw'
   }
 };
