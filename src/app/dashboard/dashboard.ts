@@ -1,11 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartData, ChartType, ChartOptions } from 'chart.js';
 import { environment } from '../../environments/environment';
-import { catchError, map, Observable, of, firstValueFrom } from 'rxjs';
+import { catchError, map, of, firstValueFrom } from 'rxjs';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -20,7 +26,7 @@ import { catchError, map, Observable, of, firstValueFrom } from 'rxjs';
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnInit, AfterViewInit {
   firebaseData: any[] = [];
 
   totalReports = 0;
@@ -29,7 +35,6 @@ export class Dashboard implements OnInit {
   otherCount = 0;
 
   role: string = '';
-  recentUsers: string[] = [];
   recentLocationAddresses: { address: string, lat: number, lng: number }[] = [];
 
   pieChartType: ChartType = 'pie';
@@ -96,9 +101,46 @@ export class Dashboard implements OnInit {
         this.updateAnalytics();
         this.generateFlagPieChart();
         this.generateMonthlyLineChart();
-        this.generateRecentUsersAndLocations();
+        this.generateRecentLocations();
+        this.initHeatMap();
       }
     });
+  }
+
+  ngAfterViewInit(): void {
+    const interval = setInterval(() => {
+      if (window.google && window.google.maps && window.google.maps.visualization) {
+        this.initHeatMap();
+        clearInterval(interval);
+      }
+    }, 300);
+  }
+
+  initHeatMap(): void {
+    const heatmapContainer = document.getElementById("crimeHeatMap");
+    if (!heatmapContainer || !window.google) return;
+
+    const map = new window.google.maps.Map(heatmapContainer, {
+      zoom: 12,
+      center: { lat: 14.5995, lng: 120.9842 },
+      mapTypeId: 'roadmap'
+    });
+
+    // 🔥 Weighted heatmap data (replace 'crimeWeight' with your actual data field)
+    const heatmapData = this.firebaseData
+      .filter(d => d.latitude && d.longitude)
+      .map(d => ({
+        location: new window.google.maps.LatLng(d.latitude, d.longitude),
+        weight: d.crimeWeight || 1 // Use actual crime severity or report count if available
+      }));
+
+    const heatmap = new window.google.maps.visualization.HeatmapLayer({
+      data: heatmapData,
+      radius: 30, // adjust for density visibility
+      opacity: 0.7
+    });
+
+    heatmap.setMap(map);
   }
 
   getGoogleMapsLink(lat: number, lng: number): string {
@@ -129,7 +171,8 @@ export class Dashboard implements OnInit {
     this.updateAnalytics();
     this.generateFlagPieChart();
     this.generateMonthlyLineChart();
-    this.generateRecentUsersAndLocations();
+    this.generateRecentLocations();
+    this.initHeatMap();
   }
 
   updateAnalytics(): void {
@@ -172,8 +215,8 @@ export class Dashboard implements OnInit {
 
   generateMonthlyLineChart(): void {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const reportsPerMonth: { [key: string]: number } = {};
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const reportsPerMonth: Record<string, number> = {};
     const yearsWithData = new Set<number>();
 
     this.firebaseData.forEach(item => {
@@ -211,15 +254,10 @@ export class Dashboard implements OnInit {
     };
   }
 
-  async generateRecentUsersAndLocations(): Promise<void> {
+  async generateRecentLocations(): Promise<void> {
     const sorted = [...this.firebaseData]
       .filter(item => item.timestamp)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-    this.recentUsers = sorted
-      .map(item => item.userNumber || item.authId || 'Unknown User')
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .slice(0, 10);
 
     const recentCoords = sorted
       .filter(item => item.latitude && item.longitude)
@@ -244,9 +282,9 @@ export class Dashboard implements OnInit {
 
     return firstValueFrom(
       this.http.get<any>(url).pipe(
-        map(response => {
-          if (response.status === 'OK' && response.results.length > 0) {
-            const best = response.results.find((r: any) => r.formatted_address);
+        map((response: any) => {
+          if (response.status === 'OK' && Array.isArray(response.results) && response.results.length > 0) {
+            const best = response.results.find((r: any) => typeof r.formatted_address === 'string');
             return best?.formatted_address || `${lat}, ${lng}`;
           }
           console.warn('No geocoding result:', response);
