@@ -128,7 +128,7 @@ export class Dashboard implements OnInit, AfterViewInit {
 
     const map = new window.google.maps.Map(heatmapContainer, {
       zoom: 12,
-      center: { lat: 120.6200, lng: 15.0794 },
+      center: { lat: 14.5995, lng: 120.9842 },
       mapTypeId: 'roadmap'
     });
 
@@ -141,7 +141,7 @@ export class Dashboard implements OnInit, AfterViewInit {
 
     const heatmap = new window.google.maps.visualization.HeatmapLayer({
       data: heatmapData,
-      radius: 30, // eto yung lawak ng isang crime so gawin nating mas maliit since per brgy sya.
+      radius: 45, // eto yung lawak ng isang crime so gawin nating mas maliit since per brgy sya.
       opacity: 0.7 // familiar naman siguro tayo sa opacity and it's a visibilty of an object.
     });
 
