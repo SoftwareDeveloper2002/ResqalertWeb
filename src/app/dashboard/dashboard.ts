@@ -128,7 +128,7 @@ export class Dashboard implements OnInit, AfterViewInit {
 
     const map = new window.google.maps.Map(heatmapContainer, {
       zoom: 12,
-      center: { lat: 14.5995, lng: 120.9842 },
+      center: { lat: 120.6200, lng: 15.0794 },
       mapTypeId: 'roadmap'
     });
 
