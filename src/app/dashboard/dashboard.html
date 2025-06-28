@@ -92,39 +92,52 @@
     </div>
 
     <!-- Row for History -->
-    <div class="row g-3">
-      <!-- Heatmap: Highest Crime Rate -->
-      <div class="col-md-6">
-        <div class="card shadow-sm rounded-3 h-100">
-          <div class="card-body">
-            <h6 class="fw-bold text-center mb-3">🗺️ Highest Crime Rate (Heat Map)</h6>
-            <div id="crimeHeatMap" style="height: 300px; width: 100%; border-radius: 6px; overflow: hidden;"></div>
-          </div>
+    <!-- 🗺️ Highest Crime Rate (Heat Map + Recent Locations) -->
+<div class="col-md-12">
+  <div class="card shadow-sm rounded-3 h-100">
+    <div class="card-body">
+      <h6 class="fw-bold text-center mb-3">🗺️ Highest Crime Rate (Heat Map)</h6>
+
+      <!-- Google Heatmap -->
+      <div id="crimeHeatMap" style="height: 300px; width: 100%; border-radius: 6px; overflow: hidden;"></div>
+
+      <hr class="my-4">
+
+      <!-- Filter and Summary -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <label class="fw-semibold me-2">Filter by Crime Type:</label>
+          <select class="form-select form-select-sm d-inline w-auto"
+                  [(ngModel)]="selectedCrimeType"
+                  (change)="filterRecentLocations()">
+            <option value="All">All</option>
+            <option *ngFor="let crime of crimeTypes" [value]="crime">{{ crime }}</option>
+          </select>
+        </div>
+        <div class="text-muted small">
+          Showing <strong>{{ filteredLocationAddresses.length }}</strong> of {{ recentLocationAddresses.length }} reports.
         </div>
       </div>
 
-      <!-- 📍 Recent Reported Locations -->
-      <div class="col-md-6">
-        <div class="card shadow-sm rounded-3 h-100">
-          <div class="card-body">
-            <h6 class="fw-bold text-center mb-3">📍 Recent Locations</h6>
-            <ul class="list-group">
-              <li class="list-group-item" *ngFor="let loc of recentLocationAddresses">
-                <i class="bi bi-geo-alt-fill text-danger me-2"></i>
-                <div class="d-flex flex-column">
-                  <span class="fw-semibold">{{ loc.address }}</span>
-                  <a [href]="'https://www.google.com/maps?q=' + loc.lat + ',' + loc.lng"
-                    class="text-decoration-none text-primary small"
-                    target="_blank"
-                    [title]="'View on Google Maps'">
-                    {{ loc.lat }}, {{ loc.lng }}
-                  </a>
-                </div>
-              </li>
-            </ul>
+      <!-- Location List -->
+      <ul class="list-group small overflow-auto" style="max-height: 250px;">
+        <li class="list-group-item" *ngFor="let loc of filteredLocationAddresses">
+          <div class="d-flex flex-column">
+            <span class="fw-semibold">
+              <i class="bi bi-geo-alt-fill text-danger me-2"></i>{{ loc.address }}
+            </span>
+            <a [href]="'https://www.google.com/maps?q=' + loc.lat + ',' + loc.lng"
+              class="text-decoration-none text-primary"
+              target="_blank">
+              {{ loc.lat }}, {{ loc.lng }}
+            </a>
+            <span class="text-muted small">Crime: {{ loc.crime || 'Unknown' }}</span>
           </div>
-        </div>
-      </div>
+        </li>
+      </ul>
     </div>
+  </div>
+</div>
+
   </main>
 </div>

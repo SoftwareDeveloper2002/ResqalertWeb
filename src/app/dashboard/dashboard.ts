@@ -6,6 +6,7 @@ import { NgChartsModule } from 'ng2-charts';
 import { ChartData, ChartType, ChartOptions } from 'chart.js';
 import { environment } from '../../environments/environment';
 import { catchError, map, of, firstValueFrom } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 declare global {
   interface Window {
@@ -20,6 +21,7 @@ declare global {
     CommonModule,
     HttpClientModule,
     RouterLink,
+    FormsModule,
     RouterLinkActive,
     NgChartsModule
   ],
@@ -27,6 +29,10 @@ declare global {
   styleUrls: ['./dashboard.scss']
 })
 export class Dashboard implements OnInit, AfterViewInit {
+  selectedCrimeType: string = 'All';
+  crimeTypes: string[] = [];
+  filteredLocationAddresses: { address: string, lat: number, lng: number, crime: string }[] = [];
+
   firebaseData: any[] = [];
 
   totalReports = 0;
@@ -35,7 +41,7 @@ export class Dashboard implements OnInit, AfterViewInit {
   otherCount = 0;
 
   role: string = '';
-  recentLocationAddresses: { address: string, lat: number, lng: number }[] = [];
+  recentLocationAddresses: { address: string, lat: number, lng: number, crime: string }[] = [];
 
   pieChartType: ChartType = 'pie';
   pieChartData: ChartData<'pie', number[], string | string[]> = {
@@ -126,18 +132,17 @@ export class Dashboard implements OnInit, AfterViewInit {
       mapTypeId: 'roadmap'
     });
 
-    // 🔥 Weighted heatmap data (replace 'crimeWeight' with your actual data field)
     const heatmapData = this.firebaseData
       .filter(d => d.latitude && d.longitude)
       .map(d => ({
         location: new window.google.maps.LatLng(d.latitude, d.longitude),
-        weight: d.crimeWeight || 1 // Use actual crime severity or report count if available
+        weight: d.crimeWeight || 1 // Eto yung nag cacount ng crime for the specific places.
       }));
 
     const heatmap = new window.google.maps.visualization.HeatmapLayer({
       data: heatmapData,
-      radius: 30, // adjust for density visibility
-      opacity: 0.7
+      radius: 30, // eto yung lawak ng isang crime so gawin nating mas maliit since per brgy sya.
+      opacity: 0.7 // familiar naman siguro tayo sa opacity and it's a visibilty of an object.
     });
 
     heatmap.setMap(map);
@@ -261,20 +266,39 @@ export class Dashboard implements OnInit, AfterViewInit {
 
     const recentCoords = sorted
       .filter(item => item.latitude && item.longitude)
-      .map(item => ({ lat: item.latitude, lng: item.longitude }))
-      .slice(0, 10);
+      .slice(0, 50);
 
     this.recentLocationAddresses = [];
+    const crimeSet = new Set<string>();
 
-    for (const coord of recentCoords) {
-      const address = await this.getPlusCodeFromCoordinates(coord.lat, coord.lng);
+    for (const item of recentCoords) {
+      const address = await this.getPlusCodeFromCoordinates(item.latitude, item.longitude);
+      const crimeType = item.flag?.[0] || 'Unknown';
+
       this.recentLocationAddresses.push({
-        address: address || `${coord.lat}, ${coord.lng}`,
-        lat: coord.lat,
-        lng: coord.lng
+        address: address || `${item.latitude}, ${item.longitude}`,
+        lat: item.latitude,
+        lng: item.longitude,
+        crime: crimeType
       });
+
+      crimeSet.add(crimeType);
     }
+
+    this.crimeTypes = Array.from(crimeSet).sort();
+    this.filterRecentLocations();
   }
+
+  filterRecentLocations(): void {
+  if (this.selectedCrimeType === 'All') {
+    this.filteredLocationAddresses = this.recentLocationAddresses;
+  } else {
+    this.filteredLocationAddresses = this.recentLocationAddresses.filter(
+      loc => loc.crime === this.selectedCrimeType
+    );
+  }
+}
+
 
   getPlusCodeFromCoordinates(lat: number, lng: number): Promise<string> {
     const apiKey = environment.firebase.googleMapsApiKey;
