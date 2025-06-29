@@ -90,150 +90,101 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.role = localStorage.getItem('role') || 'Unknown';
-
-    const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json';
-    this.http.get<any>(url).subscribe((response) => {
-      if (response) {
-        this.firebaseData = Object.entries(response).map(([key, entry]: [string, any]) => {
-          const lat = entry.latitude ?? null;
-          const lng = entry.longitude ?? null;
-          return {
-            id: key,
-            ...entry,
-            googleMapLink: lat && lng ? this.getGoogleMapsLink(lat, lng) : null
-          };
-        });
-
-        this.updateAnalytics();
-        this.generateFlagPieChart();
-        this.generateMonthlyLineChart();
-        this.generateRecentLocations();
-        this.initHeatMap();
-      }
-    });
+    this.fetchSummary();
+    this.fetchFlags();
+    this.fetchRawDataAndProcessRecentLocations(); // fetch monthly is handled here now
   }
 
   ngAfterViewInit(): void {
     const interval = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.visualization) {
+      if (window.google && window.google.maps?.visualization) {
         this.initHeatMap();
         clearInterval(interval);
       }
     }, 300);
   }
 
-  initHeatMap(): void {
-    const heatmapContainer = document.getElementById("crimeHeatMap");
-    if (!heatmapContainer || !window.google) return;
+  private fetchSummary(): void {
+    const url = `${environment.backendUrl}/api/dashboard/summary`;
+    this.http.get<any>(url).subscribe({
+      next: data => {
+        this.totalReports = data.totalReports;
+        this.rescuedCount = data.rescuedCount;
+        this.invalidCount = data.invalidCount;
+        this.otherCount = data.otherCount;
 
-    const map = new window.google.maps.Map(heatmapContainer, {
-      zoom: 12,
-      center: { lat: 14.5995, lng: 120.9842 },
-      mapTypeId: 'roadmap'
-    });
-
-    const heatmapData = this.firebaseData
-      .filter(d => d.latitude && d.longitude)
-      .map(d => ({
-        location: new window.google.maps.LatLng(d.latitude, d.longitude),
-        weight: d.crimeWeight || 1 // Eto yung nag cacount ng crime for the specific places.
-      }));
-
-    const heatmap = new window.google.maps.visualization.HeatmapLayer({
-      data: heatmapData,
-      radius: 45, // eto yung lawak ng isang crime so gawin nating mas maliit since per brgy sya.
-      opacity: 0.7 // familiar naman siguro tayo sa opacity and it's a visibilty of an object.
-    });
-
-    heatmap.setMap(map);
-  }
-
-  getGoogleMapsLink(lat: number, lng: number): string {
-    return `https://www.google.com/maps?q=${lat},${lng}`;
-  }
-
-  markAsRescued(itemId: string): void {
-    const updateUrl = `https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports/${itemId}.json`;
-    this.http.patch(updateUrl, { status: 'Rescued' }).subscribe(() => {
-      this.firebaseData = this.firebaseData.map(item =>
-        item.id === itemId ? { ...item, status: 'Rescued' } : item
-      );
-      this.refreshCharts();
+        this.statusPieChartData = {
+          labels: ['Rescued', 'Invalid', 'Others'],
+          datasets: [{
+            data: [this.rescuedCount, this.invalidCount, this.otherCount],
+            backgroundColor: ['#28a745', '#dc3545', '#6c757d']
+          }]
+        };
+      },
+      error: err => console.error('Summary error:', err)
     });
   }
 
-  markAsInvalid(itemId: string): void {
-    const updateUrl = `https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports/${itemId}.json`;
-    this.http.patch(updateUrl, { status: 'Invalid' }).subscribe(() => {
-      this.firebaseData = this.firebaseData.map(item =>
-        item.id === itemId ? { ...item, status: 'Invalid' } : item
-      );
-      this.refreshCharts();
+  private fetchFlags(): void {
+    const url = `${environment.backendUrl}/api/dashboard/flags`;
+    this.http.get<Record<string, number>>(url).subscribe({
+      next: flagCounts => {
+        const labels = Object.keys(flagCounts);
+        const values = labels.map(label => flagCounts[label]);
+        const colors = ['#007bff', '#ffc107', '#dc3545', '#28a745', '#6c757d'];
+
+        this.pieChartData = {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: labels.map((_, i) => colors[i % colors.length])
+          }]
+        };
+      },
+      error: err => console.error('Flag data error:', err)
     });
   }
 
-  refreshCharts(): void {
-    this.updateAnalytics();
-    this.generateFlagPieChart();
-    this.generateMonthlyLineChart();
-    this.generateRecentLocations();
-    this.initHeatMap();
+  private async fetchRawDataAndProcessRecentLocations(): Promise<void> {
+    const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json';
+    try {
+      const response = await firstValueFrom(this.http.get<any>(url));
+      if (!response) return;
+
+      this.firebaseData = Object.entries(response).map(([key, entry]: [string, any]) => {
+        const lat = entry.latitude ?? null;
+        const lng = entry.longitude ?? null;
+        return {
+          id: key,
+          ...entry,
+          googleMapLink: lat && lng ? this.getGoogleMapsLink(lat, lng) : null
+        };
+      });
+
+      this.generateRecentLocations();
+      this.generateMonthlyLineChart();
+    } catch (err) {
+      console.error('Failed to fetch raw Firebase data:', err);
+    }
   }
 
-  updateAnalytics(): void {
-    this.totalReports = this.firebaseData.length;
-    this.rescuedCount = this.firebaseData.filter(item => item.status === 'Rescued').length;
-    this.invalidCount = this.firebaseData.filter(item => item.status === 'Invalid').length;
-    this.otherCount = this.totalReports - this.rescuedCount - this.invalidCount;
-
-    this.statusPieChartData = {
-      labels: ['Rescued', 'Invalid', 'Others'],
-      datasets: [{
-        data: [this.rescuedCount, this.invalidCount, this.otherCount],
-        backgroundColor: ['#28a745', '#dc3545', '#6c757d']
-      }]
-    };
-  }
-
-  generateFlagPieChart(): void {
-    const flagCounter: { [key: string]: number } = {};
-    this.firebaseData.forEach(item => {
-      if (Array.isArray(item.flag)) {
-        item.flag.forEach((flag: string) => {
-          flagCounter[flag] = (flagCounter[flag] || 0) + 1;
-        });
-      }
-    });
-
-    const labels = Object.keys(flagCounter);
-    const data = Object.values(flagCounter);
-    const colors = ['#007bff', '#ffc107', '#dc3545', '#28a745', '#6c757d'];
-
-    this.pieChartData = {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: labels.map((_, i) => colors[i % colors.length])
-      }]
-    };
-  }
-
-  generateMonthlyLineChart(): void {
+  private generateMonthlyLineChart(): void {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const reportsPerMonth: Record<string, number> = {};
+    const reportCount: Record<string, number> = {};
     const yearsWithData = new Set<number>();
 
-    this.firebaseData.forEach(item => {
-      if (item.timestamp) {
-        const date = new Date(item.timestamp);
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        yearsWithData.add(year);
-        const key = `${monthNames[month]} ${year}`;
-        reportsPerMonth[key] = (reportsPerMonth[key] || 0) + 1;
+    for (const item of this.firebaseData) {
+      const ts = item.timestamp;
+      if (ts) {
+        try {
+          const date = new Date(ts);
+          const label = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+          reportCount[label] = (reportCount[label] || 0) + 1;
+          yearsWithData.add(date.getFullYear());
+        } catch (_) {}
       }
-    });
+    }
 
     const sortedYears = Array.from(yearsWithData).sort((a, b) => a - b);
     const allLabels: string[] = [];
@@ -244,7 +195,7 @@ export class Dashboard implements OnInit, AfterViewInit {
       });
     });
 
-    const dataPoints = allLabels.map(label => reportsPerMonth[label] || 0);
+    const dataPoints = allLabels.map(label => reportCount[label] || 0);
 
     this.lineChartData = {
       labels: allLabels,
@@ -257,6 +208,32 @@ export class Dashboard implements OnInit, AfterViewInit {
         fill: true
       }]
     };
+  }
+
+  initHeatMap(): void {
+    const container = document.getElementById("crimeHeatMap");
+    if (!container || !window.google) return;
+
+    const map = new window.google.maps.Map(container, {
+      zoom: 12,
+      center: { lat: 14.5995, lng: 120.9842 },
+      mapTypeId: 'roadmap'
+    });
+
+    const heatmapData = this.firebaseData
+      .filter(d => d.latitude && d.longitude)
+      .map(d => ({
+        location: new window.google.maps.LatLng(d.latitude, d.longitude),
+        weight: d.crimeWeight || 1
+      }));
+
+    const heatmap = new window.google.maps.visualization.HeatmapLayer({
+      data: heatmapData,
+      radius: 45,
+      opacity: 0.7
+    });
+
+    heatmap.setMap(map);
   }
 
   async generateRecentLocations(): Promise<void> {
@@ -272,7 +249,7 @@ export class Dashboard implements OnInit, AfterViewInit {
     const crimeSet = new Set<string>();
 
     for (const item of recentCoords) {
-      const address = await this.getPlusCodeFromCoordinates(item.latitude, item.longitude);
+      const address = await this.getAddressFromCoordinates(item.latitude, item.longitude);
       const crimeType = item.flag?.[0] || 'Unknown';
 
       this.recentLocationAddresses.push({
@@ -290,36 +267,38 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   filterRecentLocations(): void {
-  if (this.selectedCrimeType === 'All') {
-    this.filteredLocationAddresses = this.recentLocationAddresses;
-  } else {
-    this.filteredLocationAddresses = this.recentLocationAddresses.filter(
-      loc => loc.crime === this.selectedCrimeType
-    );
+    if (this.selectedCrimeType === 'All') {
+      this.filteredLocationAddresses = this.recentLocationAddresses;
+    } else {
+      this.filteredLocationAddresses = this.recentLocationAddresses.filter(
+        loc => loc.crime === this.selectedCrimeType
+      );
+    }
   }
-}
 
-
-  getPlusCodeFromCoordinates(lat: number, lng: number): Promise<string> {
+  getAddressFromCoordinates(lat: number, lng: number): Promise<string> {
     const apiKey = environment.firebase.googleMapsApiKey;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
     return firstValueFrom(
       this.http.get<any>(url).pipe(
-        map((response: any) => {
+        map((response) => {
           if (response.status === 'OK' && Array.isArray(response.results) && response.results.length > 0) {
             const best = response.results.find((r: any) => typeof r.formatted_address === 'string');
             return best?.formatted_address || `${lat}, ${lng}`;
           }
-          console.warn('No geocoding result:', response);
           return 'Unknown Location';
         }),
-        catchError(error => {
-          console.error('Geocoding failed:', error);
+        catchError(err => {
+          console.error('Geocoding failed:', err);
           return of('Error retrieving address');
         })
       )
     );
+  }
+
+  getGoogleMapsLink(lat: number, lng: number): string {
+    return `https://www.google.com/maps?q=${lat},${lng}`;
   }
 
   logout(): void {

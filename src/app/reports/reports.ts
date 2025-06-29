@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-
-// Angular Material Modules
+import { environment } from '../../environments/environment';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -20,8 +19,6 @@ import { ImageDialogComponent } from './image-dialog.component';
     CommonModule,
     HttpClientModule,
     RouterLink,
-
-    // Material Modules
     MatIconModule,
     MatCardModule,
     MatChipsModule,
@@ -37,39 +34,22 @@ export class Reports implements OnInit {
   role: string = '';
 
   constructor(
-    private router: Router,
-    private http: HttpClient,
-    private dialog: MatDialog
+    private readonly router: Router,
+    private readonly http: HttpClient,
+    private readonly dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.role = localStorage.getItem('role') || 'Unknown';
-    const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json';
+    const apiUrl = `${environment.backendUrl}/api/reports?role=${this.role}`;
 
-    this.http.get<any>(url).subscribe((response) => {
-      if (response) {
-        this.firebaseData = Object.entries(response)
-          .map(([key, entry]: [string, any]) => {
-            const lat = entry.latitude ?? null;
-            const lng = entry.longitude ?? null;
-
-            return {
-              id: key,
-              ...entry,
-              googleMapLink: lat && lng ? this.getGoogleMapsLink(lat, lng) : null
-            };
-          })
-          .filter(item =>
-            Array.isArray(item.flag) && item.flag.includes(this.role)
-          );
-
-        console.log(`Reports visible to role "${this.role}":`, this.firebaseData);
-      }
+    this.http.get<any[]>(apiUrl).subscribe({
+      next: (data) => {
+        this.firebaseData = data;
+        console.log(`Fetched reports for role "${this.role}"`, data);
+      },
+      error: (err) => console.error('Error loading reports:', err)
     });
-  }
-
-  getGoogleMapsLink(lat: number, lng: number): string {
-    return `https://www.google.com/maps?q=${lat},${lng}`;
   }
 
   openImageDialog(url: string): void {
@@ -79,31 +59,29 @@ export class Reports implements OnInit {
     });
   }
 
-  markAsResponding(itemId: string): void {
-    const updateUrl = `https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports/${itemId}.json`;
-    this.http.patch(updateUrl, { status: 'Responding' }).subscribe(() => {
-      this.firebaseData = this.firebaseData.map(item =>
-        item.id === itemId ? { ...item, status: 'Responding' } : item
-      );
+  updateStatus(itemId: string, status: 'Responding' | 'Rescued' | 'Invalid'): void {
+    const url = `${environment.backendUrl}/api/reports/${itemId}/status`;
+
+    this.http.patch(url, { status }).subscribe({
+      next: () => {
+        this.firebaseData = this.firebaseData.map(item =>
+          item.id === itemId ? { ...item, status } : item
+        );
+      },
+      error: (err) => console.error(`Error updating status for ${itemId}:`, err)
     });
+  }
+
+  markAsResponding(itemId: string): void {
+    this.updateStatus(itemId, 'Responding');
   }
 
   markAsRescued(itemId: string): void {
-    const updateUrl = `https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports/${itemId}.json`;
-    this.http.patch(updateUrl, { status: 'Rescued' }).subscribe(() => {
-      this.firebaseData = this.firebaseData.map(item =>
-        item.id === itemId ? { ...item, status: 'Rescued' } : item
-      );
-    });
+    this.updateStatus(itemId, 'Rescued');
   }
 
   markAsInvalid(itemId: string): void {
-    const updateUrl = `https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports/${itemId}.json`;
-    this.http.patch(updateUrl, { status: 'Invalid' }).subscribe(() => {
-      this.firebaseData = this.firebaseData.map(item =>
-        item.id === itemId ? { ...item, status: 'Invalid' } : item
-      );
-    });
+    this.updateStatus(itemId, 'Invalid');
   }
 
   logout(): void {

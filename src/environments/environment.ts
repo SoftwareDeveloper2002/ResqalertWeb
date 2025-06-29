@@ -1,5 +1,7 @@
 export const environment = {
   production: false,
+  backendUrl: 'http://localhost:7000',
+
   firebase: {
     apiKey: 'AIzaSyDS7CZTrNEWr8cQIjYtFD7a64ApykYpJ1U',
     authDomain: 'resqalert-22692.firebaseapp.com',
