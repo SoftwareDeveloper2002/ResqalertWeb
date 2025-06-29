@@ -9,7 +9,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-
 import { ImageDialogComponent } from './image-dialog.component';
 
 @Component({
@@ -32,6 +31,7 @@ import { ImageDialogComponent } from './image-dialog.component';
 export class Reports implements OnInit {
   firebaseData: any[] = [];
   role: string = '';
+  barangayStats: { barangay: string; count: number }[] = [];
 
   constructor(
     private readonly router: Router,
@@ -47,6 +47,16 @@ export class Reports implements OnInit {
       next: (data) => {
         this.firebaseData = data;
         console.log(`Fetched reports for role "${this.role}"`, data);
+
+        const counts: Record<string, number> = {};
+        for (const report of data) {
+          const barangay = report.barangay || 'Unknown';
+          counts[barangay] = (counts[barangay] || 0) + 1;
+        }
+
+        this.barangayStats = Object.entries(counts)
+          .map(([barangay, count]) => ({ barangay, count }))
+          .sort((a, b) => b.count - a.count);
       },
       error: (err) => console.error('Error loading reports:', err)
     });

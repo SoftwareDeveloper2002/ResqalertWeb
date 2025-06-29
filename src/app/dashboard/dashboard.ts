@@ -14,6 +14,11 @@ declare global {
   }
 }
 
+interface BarangayCrimeCount {
+  barangay: string;
+  crimes: Record<string, number>;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -34,6 +39,8 @@ export class Dashboard implements OnInit, AfterViewInit {
   filteredLocationAddresses: { address: string, lat: number, lng: number, crime: string }[] = [];
 
   firebaseData: any[] = [];
+  barangayCrimeCounts: Record<string, Record<string, number>> = {};
+  processedBarangays: Set<string> = new Set();
 
   totalReports = 0;
   rescuedCount = 0;
@@ -86,13 +93,19 @@ export class Dashboard implements OnInit, AfterViewInit {
     }]
   };
 
+  objectKeys = Object.keys;
+
+  getCrimeTypes = (item: BarangayCrimeCount) => Object.keys(item.crimes);
+
+  get barangayCounts(): BarangayCrimeCount[] {
+    return Object.entries(this.barangayCrimeCounts).map(([barangay, crimes]) => ({ barangay, crimes }));
+  }
+
   constructor(private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.role = localStorage.getItem('role') || 'Unknown';
-    this.fetchSummary();
-    this.fetchFlags();
-    this.fetchRawDataAndProcessRecentLocations(); // fetch monthly is handled here now
+    this.fetchRawDataAndProcessRecentLocations();
   }
 
   ngAfterViewInit(): void {
@@ -102,47 +115,6 @@ export class Dashboard implements OnInit, AfterViewInit {
         clearInterval(interval);
       }
     }, 300);
-  }
-
-  private fetchSummary(): void {
-    const url = `${environment.backendUrl}/api/dashboard/summary`;
-    this.http.get<any>(url).subscribe({
-      next: data => {
-        this.totalReports = data.totalReports;
-        this.rescuedCount = data.rescuedCount;
-        this.invalidCount = data.invalidCount;
-        this.otherCount = data.otherCount;
-
-        this.statusPieChartData = {
-          labels: ['Rescued', 'Invalid', 'Others'],
-          datasets: [{
-            data: [this.rescuedCount, this.invalidCount, this.otherCount],
-            backgroundColor: ['#28a745', '#dc3545', '#6c757d']
-          }]
-        };
-      },
-      error: err => console.error('Summary error:', err)
-    });
-  }
-
-  private fetchFlags(): void {
-    const url = `${environment.backendUrl}/api/dashboard/flags`;
-    this.http.get<Record<string, number>>(url).subscribe({
-      next: flagCounts => {
-        const labels = Object.keys(flagCounts);
-        const values = labels.map(label => flagCounts[label]);
-        const colors = ['#007bff', '#ffc107', '#dc3545', '#28a745', '#6c757d'];
-
-        this.pieChartData = {
-          labels,
-          datasets: [{
-            data: values,
-            backgroundColor: labels.map((_, i) => colors[i % colors.length])
-          }]
-        };
-      },
-      error: err => console.error('Flag data error:', err)
-    });
   }
 
   private async fetchRawDataAndProcessRecentLocations(): Promise<void> {
@@ -163,9 +135,73 @@ export class Dashboard implements OnInit, AfterViewInit {
 
       this.generateRecentLocations();
       this.generateMonthlyLineChart();
+      await this.generateBarangayCrimeCounts();
+      this.generateLocalSummaryAndFlags();
     } catch (err) {
       console.error('Failed to fetch raw Firebase data:', err);
     }
+  }
+
+  private generateLocalSummaryAndFlags(): void {
+    this.totalReports = this.firebaseData.length;
+    this.rescuedCount = this.firebaseData.filter(d => d.status === 'Rescued').length;
+    this.invalidCount = this.firebaseData.filter(d => d.status === 'Invalid').length;
+    this.otherCount = this.totalReports - this.rescuedCount - this.invalidCount;
+
+    this.statusPieChartData.datasets[0].data = [this.rescuedCount, this.invalidCount, this.otherCount];
+
+    const flagCounts: Record<string, number> = {};
+    for (const item of this.firebaseData) {
+      const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
+      for (const flag of flags) {
+        flagCounts[flag] = (flagCounts[flag] || 0) + 1;
+      }
+    }
+
+    const labels = Object.keys(flagCounts);
+    const values = labels.map(label => flagCounts[label]);
+    const colors = ['#007bff', '#ffc107', '#dc3545', '#28a745', '#6c757d'];
+
+    this.pieChartData = {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map((_, i) => colors[i % colors.length])
+      }]
+    };
+  }
+
+  private async generateBarangayCrimeCounts(): Promise<void> {
+    this.barangayCrimeCounts = {};
+    this.processedBarangays.clear();
+
+    for (const report of this.firebaseData) {
+      const { latitude, longitude, flag } = report;
+      const flags = Array.isArray(flag) ? flag : ['Unknown'];
+      const latlngKey = `${latitude},${longitude}`;
+      if (!latitude || !longitude || this.processedBarangays.has(latlngKey)) continue;
+
+      const address = await this.getAddressFromCoordinates(latitude, longitude);
+      const barangay = this.extractBarangayFromAddress(address);
+      if (!barangay) continue;
+
+      this.barangayCrimeCounts[barangay] = this.barangayCrimeCounts[barangay] || {};
+      for (const f of flags) {
+        this.barangayCrimeCounts[barangay][f] = (this.barangayCrimeCounts[barangay][f] || 0) + 1;
+      }
+      this.processedBarangays.add(latlngKey);
+      await new Promise(res => setTimeout(res, 150));
+    }
+  }
+
+  extractBarangayFromAddress(address: string): string {
+    const patterns = [/Brgy\.?\s*([A-Za-z0-9\s]+)/i, /Barangay\s*([A-Za-z0-9\s]+)/i];
+    for (const pattern of patterns) {
+      const match = address.match(pattern);
+      if (match) return `Barangay ${match[1].trim()}`;
+    }
+    const parts = address.split(',');
+    return parts.length > 0 ? parts[0].trim() : 'Unknown';
   }
 
   private generateMonthlyLineChart(): void {
@@ -188,7 +224,6 @@ export class Dashboard implements OnInit, AfterViewInit {
 
     const sortedYears = Array.from(yearsWithData).sort((a, b) => a - b);
     const allLabels: string[] = [];
-
     sortedYears.forEach(year => {
       monthNames.forEach(month => {
         allLabels.push(`${month} ${year}`);
@@ -241,24 +276,19 @@ export class Dashboard implements OnInit, AfterViewInit {
       .filter(item => item.timestamp)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    const recentCoords = sorted
-      .filter(item => item.latitude && item.longitude)
-      .slice(0, 50);
-
+    const recentCoords = sorted.filter(item => item.latitude && item.longitude).slice(0, 50);
     this.recentLocationAddresses = [];
     const crimeSet = new Set<string>();
 
     for (const item of recentCoords) {
       const address = await this.getAddressFromCoordinates(item.latitude, item.longitude);
       const crimeType = item.flag?.[0] || 'Unknown';
-
       this.recentLocationAddresses.push({
         address: address || `${item.latitude}, ${item.longitude}`,
         lat: item.latitude,
         lng: item.longitude,
         crime: crimeType
       });
-
       crimeSet.add(crimeType);
     }
 
@@ -267,13 +297,9 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   filterRecentLocations(): void {
-    if (this.selectedCrimeType === 'All') {
-      this.filteredLocationAddresses = this.recentLocationAddresses;
-    } else {
-      this.filteredLocationAddresses = this.recentLocationAddresses.filter(
-        loc => loc.crime === this.selectedCrimeType
-      );
-    }
+    this.filteredLocationAddresses = this.selectedCrimeType === 'All'
+      ? this.recentLocationAddresses
+      : this.recentLocationAddresses.filter(loc => loc.crime === this.selectedCrimeType);
   }
 
   getAddressFromCoordinates(lat: number, lng: number): Promise<string> {
