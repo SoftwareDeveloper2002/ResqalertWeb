@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  backendUrl: 'http://localhost:7000',
+  backendUrl: 'https://resqalertwebbackend.onrender.com',
 
   firebase: {
     apiKey: 'AIzaSyDS7CZTrNEWr8cQIjYtFD7a64ApykYpJ1U',
