@@ -41,7 +41,9 @@ export class Reports implements OnInit {
 
   ngOnInit(): void {
     this.role = localStorage.getItem('role') || 'Unknown';
-    const apiUrl = `${environment.backendUrl}/api/reports?role=${this.role}`;
+
+    // ✅ UPDATED API endpoint
+    const apiUrl = `${environment.backendUrl}/api/report/reports?role=${this.role}`;
 
     this.http.get<any[]>(apiUrl).subscribe({
       next: (data) => {
@@ -70,7 +72,8 @@ export class Reports implements OnInit {
   }
 
   updateStatus(itemId: string, status: 'Responding' | 'Rescued' | 'Invalid'): void {
-    const url = `${environment.backendUrl}/api/reports/${itemId}/status`;
+    // ✅ UPDATED PATCH endpoint
+    const url = `${environment.backendUrl}/api/report/reports/${itemId}/status`;
 
     this.http.patch(url, { status }).subscribe({
       next: () => {

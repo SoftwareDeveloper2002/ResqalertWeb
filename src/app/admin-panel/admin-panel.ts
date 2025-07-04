@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-admin-login',
@@ -14,40 +15,43 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
 export class AdminPanel {
   username = '';
   password = '';
-  selectedRole = ''; // 👈 Role: PNP, BFP, MDRRMO
+  selectedRole = ''; // e.g., 'PNP', 'BFP', 'MDRRMO'
+  isLoading = false;
 
   constructor(private router: Router, private http: HttpClient) {}
 
   onLogin(): void {
     if (!this.username || !this.password || !this.selectedRole) {
-        localStorage.setItem('role', this.selectedRole);
-      alert('All fields are required.');
+      alert('⚠️ All fields are required.');
       return;
-
     }
 
-    const dbUrl = `https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/admins/${this.selectedRole}.json`;
+    const loginPayload = {
+      username: this.username.trim(),
+      password: this.password,
+      role: this.selectedRole
+    };
 
-    this.http.get<any>(dbUrl).subscribe((users) => {
-      if (!users) {
-        alert('No users found for selected role.');
-        return;
+    const url = `${environment.backendUrl}/api/admin/login`;
+
+    this.isLoading = true;
+
+    this.http.post<{ success: boolean; message: string }>(url, loginPayload).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+        if (response.success) {
+          localStorage.setItem('role', this.selectedRole);
+          this.router.navigate(['/dashboard']);
+        } else {
+          alert('❌ ' + response.message);
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Login failed:', err);
+        alert('❌ Login failed. Please try again later.');
       }
-
-      const matchedUser = Object.values(users).find(
-        (user: any) => user.username === this.username && user.password === this.password
-      );
-
-      if (matchedUser) {
-        console.log(`✅ Login successful as ${this.selectedRole}`);
-        this.router.navigate(['/dashboard']);
-        localStorage.setItem('role', this.selectedRole);
-      } else {
-        alert('❌ Invalid credentials');
-      }
-    }, error => {
-      console.error('Error connecting to Firebase:', error);
-      alert('Login failed. Please try again later.');
     });
   }
 }
