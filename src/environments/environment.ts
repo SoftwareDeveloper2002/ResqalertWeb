@@ -1,7 +1,8 @@
 export const environment = {
   production: false,
   backendUrl: 'https://resqalertwebbackend.onrender.com',
-
+  // backendUrl: 'http://127.0.0.1:7000',
+  // backendUrl https://resqalertwebbackend.onrender.com
   firebase: {
     apiKey: 'AIzaSyDS7CZTrNEWr8cQIjYtFD7a64ApykYpJ1U',
     authDomain: 'resqalert-22692.firebaseapp.com',
