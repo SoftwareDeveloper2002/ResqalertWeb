@@ -1,9 +1,12 @@
 export const environment = {
   production: false,
-  backendUrl: 'http://127.0.0.1:7000',
-  databaseURL: 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app',
+  backendUrl: 'https://resqalertwebbackend.onrender.com',
   // backendUrl: 'http://127.0.0.1:7000',
   // backendUrl https://resqalertwebbackend.onrender.com
+
+
+  databaseURL: 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app',
+
   firebase: {
     apiKey: 'AIzaSyDS7CZTrNEWr8cQIjYtFD7a64ApykYpJ1U',
     authDomain: 'resqalert-22692.firebaseapp.com',
