@@ -1,0 +1,108 @@
+<!-- Top Navbar as a Component -->
+<app-navbar [role]="role" [isLoggedIn]="true" (logoutEvent)="logout()"></app-navbar>
+
+<!-- Main Layout -->
+<div class="d-flex" style="min-height: 100vh; background-color: #f8f9fa;">
+  <!-- Sidebar -->
+  <aside class="bg-white border-end p-4 shadow-sm" style="width: 250px;">
+    <h6 class="fw-bold mb-4 text-primary">📂 Navigation</h6>
+    <ul class="nav flex-column gap-2">
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" routerLink="/dashboard" routerLinkActive="active">🏠 Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Content Area -->
+  <main class="flex-fill p-4">
+    <h5 class="fw-bold text-primary mb-4">📝 Feedback</h5>
+
+    <div class="card shadow-sm border-0 rounded-3">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table align-middle table-hover">
+            <thead class="table-light">
+              <tr class="text-center text-uppercase small">
+                <th>#</th>
+                <th>Ticket</th>
+                <th>Message</th>
+                <th>Submitted At</th>
+                <th>Submitted By</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let feedback of pagedFeedbackList; let i = index" class="text-center">
+                <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+                <td><span class="badge bg-danger">{{ feedback.ticket }}</span></td>
+                <td>
+                  <span class="text-dark fw-normal"
+                        (click)="openFullMessageDialog(feedback.message)"
+                        style="cursor: pointer; text-decoration: underline dotted;">
+                    {{ feedback.message.length > 30 ? (feedback.message | slice:0:30) + '...' : feedback.message }}
+                  </span>
+                </td>
+                <td>{{ feedback.timestamp | date: 'medium' }}</td>
+                <td>{{ feedback.submittedBy || 'Anonymous' }}</td>
+                <td>
+                  <span class="badge"
+                        [ngClass]="{
+                          'bg-success': feedback.status === 'Resolved',
+                          'bg-warning text-dark': feedback.status === 'Queued',
+                          'bg-secondary': feedback.status === 'Unresolved'
+                        }">
+                    {{ feedback.status || 'Unresolved' }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-success me-1"
+                          (click)="updateFeedbackStatus(feedback, 'Resolved')">
+                    ✔️ Resolved
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger me-1"
+                          (click)="updateFeedbackStatus(feedback, 'Unresolved')">
+                    ❌ Unresolved
+                  </button>
+                  <button class="btn btn-sm btn-outline-warning text-dark"
+                          (click)="updateFeedbackStatus(feedback, 'Queued')">
+                    ⏳ Queued
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="feedbackList.length === 0">
+                <td colspan="7" class="text-center text-muted">No feedback submitted yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <nav *ngIf="totalPages > 1" class="mt-3">
+          <ul class="pagination justify-content-center mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="goToPage(currentPage - 1)">Previous</button>
+            </li>
+
+            <li class="page-item"
+                *ngFor="let page of [].constructor(totalPages); let i = index"
+                [class.active]="i + 1 === currentPage">
+              <button class="page-link" (click)="goToPage(i + 1)">{{ i + 1 }}</button>
+            </li>
+
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <button class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
+            </li>
+          </ul>
+        </nav>
+
+      </div>
+    </div>
+  </main>
+</div>

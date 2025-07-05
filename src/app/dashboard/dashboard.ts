@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
@@ -7,6 +7,9 @@ import { ChartData, ChartType, ChartOptions } from 'chart.js';
 import { environment } from '../../environments/environment';
 import { catchError, map, of, firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { FeedbackDialog } from '../feedback-dialog/feedback-dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { NavbarComponent } from "../shared/navbar/navbar";
 
 declare global {
   interface Window {
@@ -28,12 +31,19 @@ interface BarangayCrimeCount {
     RouterLink,
     FormsModule,
     RouterLinkActive,
-    NgChartsModule
-  ],
+    NgChartsModule,
+    MatDialogModule,
+    FeedbackDialog,
+    NavbarComponent
+],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
 export class Dashboard implements OnInit, AfterViewInit {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private dialog = inject(MatDialog);
+
   selectedCrimeType: string = 'All';
   crimeTypes: string[] = [];
   filteredLocationAddresses: { address: string, lat: number, lng: number, crime: string }[] = [];
@@ -48,6 +58,7 @@ export class Dashboard implements OnInit, AfterViewInit {
   otherCount = 0;
 
   role: string = '';
+  isLoggedIn: boolean = false;
   recentLocationAddresses: { address: string, lat: number, lng: number, crime: string }[] = [];
 
   pieChartType: ChartType = 'pie';
@@ -101,10 +112,10 @@ export class Dashboard implements OnInit, AfterViewInit {
     return Object.entries(this.barangayCrimeCounts).map(([barangay, crimes]) => ({ barangay, crimes }));
   }
 
-  constructor(private router: Router, private http: HttpClient) {}
-
   ngOnInit(): void {
-    this.role = localStorage.getItem('role') || 'Unknown';
+    this.role = localStorage.getItem('role') ?? 'Unknown';
+    this.isLoggedIn = !!this.role;
+    this.loadSummaryFromAPI();
     this.fetchRawDataAndProcessRecentLocations();
   }
 
@@ -115,6 +126,59 @@ export class Dashboard implements OnInit, AfterViewInit {
         clearInterval(interval);
       }
     }, 300);
+  }
+
+  openFeedbackDialog(): void {
+    const dialogRef = this.dialog.open(FeedbackDialog, {
+      width: '400px',
+      data: { role: this.role }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.message) {
+        const ticket = `#${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 8)}`;
+        const payload = {
+          message: result.message,
+          submittedBy: this.role,
+          timestamp: new Date().toISOString(),
+          ticket: ticket
+        };
+
+        this.http.post(
+          'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json',
+          payload
+        ).subscribe(
+          () => alert(`✅ Feedback submitted with Ticket ${ticket}`),
+          () => alert('❌ Failed to submit feedback')
+        );
+      }
+    });
+  }
+
+  logout(): void {
+    this.router.navigate(['/login']);
+  }
+
+  private loadSummaryFromAPI(): void {
+    this.http.get<any>('/api/dashboard/summary').subscribe({
+      next: (res) => {
+        this.totalReports = res.totalReports || 0;
+        this.rescuedCount = res.rescuedCount || 0;
+        this.invalidCount = res.invalidCount || 0;
+        this.otherCount = res.otherCount || 0;
+
+        this.statusPieChartData = {
+          labels: ['Rescued', 'Invalid', 'Others'],
+          datasets: [{
+            data: [this.rescuedCount, this.invalidCount, this.otherCount],
+            backgroundColor: ['#28a745', '#dc3545', '#6c757d']
+          }]
+        };
+      },
+      error: (err) => {
+        console.error('Failed to load summary:', err);
+      }
+    });
   }
 
   private async fetchRawDataAndProcessRecentLocations(): Promise<void> {
@@ -136,24 +200,21 @@ export class Dashboard implements OnInit, AfterViewInit {
       this.generateRecentLocations();
       this.generateMonthlyLineChart();
       await this.generateBarangayCrimeCounts();
-      this.generateLocalSummaryAndFlags();
+      this.generateFlagDistribution();
     } catch (err) {
-      console.error('Failed to fetch raw Firebase data:', err);
+      console.error('Failed to fetch Firebase data:', err);
     }
   }
 
-  private generateLocalSummaryAndFlags(): void {
-    this.totalReports = this.firebaseData.length;
-    this.rescuedCount = this.firebaseData.filter(d => d.status === 'Rescued').length;
-    this.invalidCount = this.firebaseData.filter(d => d.status === 'Invalid').length;
-    this.otherCount = this.totalReports - this.rescuedCount - this.invalidCount;
-
-    this.statusPieChartData.datasets[0].data = [this.rescuedCount, this.invalidCount, this.otherCount];
-
+  private generateFlagDistribution(): void {
     const flagCounts: Record<string, number> = {};
     for (const item of this.firebaseData) {
       const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
-      for (const flag of flags) {
+      for (let flag of flags) {
+        if (typeof flag === 'string') {
+          flag = flag.trim();
+          if (flag.toUpperCase() === 'MDRMM') flag = 'MDRMMO';
+        }
         flagCounts[flag] = (flagCounts[flag] || 0) + 1;
       }
     }
@@ -176,8 +237,7 @@ export class Dashboard implements OnInit, AfterViewInit {
     this.processedBarangays.clear();
 
     for (const report of this.firebaseData) {
-      const { latitude, longitude, flag } = report;
-      const flags = Array.isArray(flag) ? flag : ['Unknown'];
+      const { latitude, longitude } = report;
       const latlngKey = `${latitude},${longitude}`;
       if (!latitude || !longitude || this.processedBarangays.has(latlngKey)) continue;
 
@@ -186,9 +246,8 @@ export class Dashboard implements OnInit, AfterViewInit {
       if (!barangay) continue;
 
       this.barangayCrimeCounts[barangay] = this.barangayCrimeCounts[barangay] || {};
-      for (const f of flags) {
-        this.barangayCrimeCounts[barangay][f] = (this.barangayCrimeCounts[barangay][f] || 0) + 1;
-      }
+      this.barangayCrimeCounts[barangay]['Reports'] = (this.barangayCrimeCounts[barangay]['Reports'] || 0) + 1;
+
       this.processedBarangays.add(latlngKey);
       await new Promise(res => setTimeout(res, 150));
     }
@@ -205,8 +264,7 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   private generateMonthlyLineChart(): void {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const reportCount: Record<string, number> = {};
     const yearsWithData = new Set<number>();
 
@@ -244,6 +302,7 @@ export class Dashboard implements OnInit, AfterViewInit {
       }]
     };
   }
+
 
   initHeatMap(): void {
     const container = document.getElementById("crimeHeatMap");
@@ -325,9 +384,5 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   getGoogleMapsLink(lat: number, lng: number): string {
     return `https://www.google.com/maps?q=${lat},${lng}`;
-  }
-
-  logout(): void {
-    this.router.navigate(['/login']);
   }
 }

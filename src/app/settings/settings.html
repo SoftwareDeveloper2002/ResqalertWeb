@@ -1,0 +1,33 @@
+<div class="container mt-4">
+  <h4 class="mb-4 text-primary">⚙️ Settings</h4>
+
+  <!-- Theme -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header">🌓 Theme</div>
+    <div class="card-body">
+      <select class="form-select" [(ngModel)]="selectedTheme" (change)="applyTheme()">
+        <option value="light">🌞 Light</option>
+        <option value="dark">🌙 Dark</option>
+        <option value="system">🖥️ System Default</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Account -->
+  <div class="card shadow-sm">
+    <div class="card-header">👤 Account</div>
+    <div class="card-body">
+      <form (ngSubmit)="updateAccount()">
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input id="username" class="form-control" [(ngModel)]="username" name="username" required />
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">New Password</label>
+          <input id="password" type="password" class="form-control" [(ngModel)]="password" name="password" required />
+        </div>
+        <button class="btn btn-primary">💾 Save</button>
+      </form>
+    </div>
+  </div>
+</div>

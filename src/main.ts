@@ -4,12 +4,12 @@ import { provideDatabase, getDatabase } from '@angular/fire/database';
 import { App } from './app/app';
 import { appConfig } from './app/app.config';
 import { environment } from './environments/environment';
-import { Dashboard } from './app/dashboard/dashboard';
-
+import { provideHttpClient } from '@angular/common/http';
 
 bootstrapApplication(App, {
   ...appConfig,
   providers: [
+    provideHttpClient(), // ✅ Already included
     ...appConfig.providers || [],
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideDatabase(() => getDatabase())
