@@ -10,19 +10,19 @@ import { FormsModule } from '@angular/forms';
 import { FeedbackDialog } from '../feedback-dialog/feedback-dialog';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NavbarComponent } from "../shared/navbar/navbar";
-
-declare global {
+// sa taas yung mga imports
+declare global { // to declare global variables
   interface Window {
-    google: any;
+    google: any; // to access google maps
   }
 }
 
-interface BarangayCrimeCount {
-  barangay: string;
-  crimes: Record<string, number>;
+interface BarangayCrimeCount { // to define the structure of barangay crime counts
+  barangay: string; // name of the barangay
+  crimes: Record<string, number>; // crimes in the barangay with their counts
 }
 
-@Component({
+@Component({ // to define the component
   selector: 'app-dashboard',
   standalone: true,
   imports: [
@@ -39,7 +39,7 @@ interface BarangayCrimeCount {
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
-export class Dashboard implements OnInit, AfterViewInit {
+export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit and AfterViewInit interfaces
   private http = inject(HttpClient);
   private router = inject(Router);
   private dialog = inject(MatDialog);
@@ -74,7 +74,9 @@ export class Dashboard implements OnInit, AfterViewInit {
       backgroundColor: ['#28a745', '#dc3545', '#6c757d']
     }]
   };
-
+// to define the pie chart data for status distribution
+// to define the line chart data for monthly reports
+// to define the line chart options
   lineChartType: ChartType = 'line';
   lineChartOptions: ChartOptions = {
     responsive: true,
@@ -111,14 +113,14 @@ export class Dashboard implements OnInit, AfterViewInit {
   get barangayCounts(): BarangayCrimeCount[] {
     return Object.entries(this.barangayCrimeCounts).map(([barangay, crimes]) => ({ barangay, crimes }));
   }
-
+  // to get the barangay counts as an array of BarangayCrimeCount objects
   ngOnInit(): void {
     this.role = localStorage.getItem('role') ?? 'Unknown';
     this.isLoggedIn = !!this.role;
     this.loadSummaryFromAPI();
     this.fetchRawDataAndProcessRecentLocations();
   }
-
+  // to initialize the component and load data from API and Firebase
   ngAfterViewInit(): void {
     const interval = setInterval(() => {
       if (window.google && window.google.maps?.visualization) {
@@ -145,7 +147,7 @@ export class Dashboard implements OnInit, AfterViewInit {
         };
 
         this.http.post(
-          'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json',
+          'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json', // Firebase URL to submit feedback
           payload
         ).subscribe(
           () => alert(`✅ Feedback submitted with Ticket ${ticket}`),
@@ -156,11 +158,11 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   logout(): void {
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login']); // Navigate to login page pag nag logout ka
   }
 
   private loadSummaryFromAPI(): void {
-    this.http.get<any>('/api/dashboard/summary').subscribe({
+    this.http.get<any>('/api/dashboard/summary').subscribe({ // to fetch summary data from the API
       next: (res) => {
         this.totalReports = res.totalReports || 0;
         this.rescuedCount = res.rescuedCount || 0;
@@ -182,7 +184,7 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   private async fetchRawDataAndProcessRecentLocations(): Promise<void> {
-    const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json';
+    const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json'; // Firebase URL to fetch reports
     try {
       const response = await firstValueFrom(this.http.get<any>(url));
       if (!response) return;
@@ -254,8 +256,8 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   extractBarangayFromAddress(address: string): string {
-    const patterns = [/Brgy\.?\s*([A-Za-z0-9\s]+)/i, /Barangay\s*([A-Za-z0-9\s]+)/i];
-    for (const pattern of patterns) {
+    const patterns = [/Brgy\.?\s*([A-Za-z0-9\s]+)/i, /Barangay\s*([A-Za-z0-9\s]+)/i]; // common patterns to match barangay names
+    for (const pattern of patterns) { // loop through each pattern
       const match = address.match(pattern);
       if (match) return `Barangay ${match[1].trim()}`;
     }
@@ -264,8 +266,8 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   private generateMonthlyLineChart(): void {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const reportCount: Record<string, number> = {};
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // array of month names
+    const reportCount: Record<string, number> = {}; // object to hold report counts
     const yearsWithData = new Set<number>();
 
     for (const item of this.firebaseData) {
@@ -293,12 +295,12 @@ export class Dashboard implements OnInit, AfterViewInit {
     this.lineChartData = {
       labels: allLabels,
       datasets: [{
-        label: 'Reports',
-        data: dataPoints,
-        borderColor: '#0d6efd',
-        backgroundColor: 'rgba(13,110,253,0.1)',
-        tension: 0.4,
-        fill: true
+        label: 'Reports', // label for the line chart
+        data: dataPoints, // data points for the line chart
+        borderColor: '#0d6efd', // color of the line
+        backgroundColor: 'rgba(13,110,253,0.1)', // background color for the area under the line
+        tension: 0.4, // smoothness of the line
+        fill: true // fill the area under the line
       }]
     };
   }
@@ -306,49 +308,49 @@ export class Dashboard implements OnInit, AfterViewInit {
 
   initHeatMap(): void {
     const container = document.getElementById("crimeHeatMap");
-    if (!container || !window.google) return;
+    if (!container || !window.google) return; // Ensure Google Maps is loaded
 
     const map = new window.google.maps.Map(container, {
-      zoom: 12,
-      center: { lat: 14.5995, lng: 120.9842 },
-      mapTypeId: 'roadmap'
+      zoom: 12, // zoom to, the higher the number the closer the zoom
+      center: { lat: 15.032314, lng: 120.692332 }, // center of the map
+      mapTypeId: 'roadmap' // as you can see sa googlemap
     });
 
     const heatmapData = this.firebaseData
-      .filter(d => d.latitude && d.longitude)
+      .filter(d => d.latitude && d.longitude) // filter out entries without coordinates
       .map(d => ({
-        location: new window.google.maps.LatLng(d.latitude, d.longitude),
-        weight: d.crimeWeight || 1
+        location: new window.google.maps.LatLng(d.latitude, d.longitude), //  coordinates of the point
+        weight: d.crimeWeight || 1 // you can set a weight for each point, default is 1
       }));
 
     const heatmap = new window.google.maps.visualization.HeatmapLayer({
       data: heatmapData,
-      radius: 45,
-      opacity: 0.7
+      radius: 12,// gaano kalaki ang circle ng heatmap
+      opacity: 0.7 // opacity ng heatmap
     });
 
-    heatmap.setMap(map);
+    heatmap.setMap(map); // to display the heatmap on the map
   }
 
   async generateRecentLocations(): Promise<void> {
-    const sorted = [...this.firebaseData]
-      .filter(item => item.timestamp)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const sorted = [...this.firebaseData] // to create a copy of firebaseData
+      .filter(item => item.timestamp) // to filter out entries without timestamp
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // to sort by timestamp in descending order
 
-    const recentCoords = sorted.filter(item => item.latitude && item.longitude).slice(0, 50);
-    this.recentLocationAddresses = [];
-    const crimeSet = new Set<string>();
+    const recentCoords = sorted.filter(item => item.latitude && item.longitude).slice(0, 50); // to get the most recent 50 entries with coordinates
+    this.recentLocationAddresses = [];// to store recent location addresses
+    const crimeSet = new Set<string>(); // to store unique crime types
 
     for (const item of recentCoords) {
-      const address = await this.getAddressFromCoordinates(item.latitude, item.longitude);
-      const crimeType = item.flag?.[0] || 'Unknown';
+      const address = await this.getAddressFromCoordinates(item.latitude, item.longitude); // to get address from coordinates
+      const crimeType = item.flag?.[0] || 'Unknown'; // to get the crime type from the flag, default to 'Unknown' if not available
       this.recentLocationAddresses.push({
         address: address || `${item.latitude}, ${item.longitude}`,
-        lat: item.latitude,
-        lng: item.longitude,
+        lat: item.latitude, // latitude of the location
+        lng: item.longitude, // longitude of the location
         crime: crimeType
       });
-      crimeSet.add(crimeType);
+      crimeSet.add(crimeType); // to add the crime type to the set
     }
 
     this.crimeTypes = Array.from(crimeSet).sort();
@@ -356,23 +358,23 @@ export class Dashboard implements OnInit, AfterViewInit {
   }
 
   filterRecentLocations(): void {
-    this.filteredLocationAddresses = this.selectedCrimeType === 'All'
-      ? this.recentLocationAddresses
-      : this.recentLocationAddresses.filter(loc => loc.crime === this.selectedCrimeType);
+    this.filteredLocationAddresses = this.selectedCrimeType === 'All' // to show all recent locations
+      ? this.recentLocationAddresses // to show all recent locations
+      : this.recentLocationAddresses.filter(loc => loc.crime === this.selectedCrimeType); // to filter by selected crime type
   }
 
   getAddressFromCoordinates(lat: number, lng: number): Promise<string> {
     const apiKey = environment.firebase.googleMapsApiKey;
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`; // to get address from coordinates using Google Maps Geocoding API
 
-    return firstValueFrom(
-      this.http.get<any>(url).pipe(
-        map((response) => {
-          if (response.status === 'OK' && Array.isArray(response.results) && response.results.length > 0) {
-            const best = response.results.find((r: any) => typeof r.formatted_address === 'string');
-            return best?.formatted_address || `${lat}, ${lng}`;
+    return firstValueFrom( // to convert observable to promise
+      this.http.get<any>(url).pipe( // to make HTTP GET request to the Geocoding API
+        map((response) => { // to process the response from the API
+          if (response.status === 'OK' && Array.isArray(response.results) && response.results.length > 0) { // check if the response is OK and has results
+            const best = response.results.find((r: any) => typeof r.formatted_address === 'string'); // to find the best formatted address
+            return best?.formatted_address || `${lat}, ${lng}`; // return the formatted address or coordinates if not found
           }
-          return 'Unknown Location';
+          return 'Unknown Location'; // return 'Unknown Location' if no address found
         }),
         catchError(err => {
           console.error('Geocoding failed:', err);
@@ -382,7 +384,7 @@ export class Dashboard implements OnInit, AfterViewInit {
     );
   }
 
-  getGoogleMapsLink(lat: number, lng: number): string {
+  getGoogleMapsLink(lat: number, lng: number): string { // to generate Google Maps link for the coordinates
     return `https://www.google.com/maps?q=${lat},${lng}`;
   }
 }

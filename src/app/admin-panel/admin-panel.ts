@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-admin-login',
@@ -22,7 +23,11 @@ export class AdminPanel {
 
   onLogin(): void {
     if (!this.username || !this.password || !this.selectedRole) {
-      alert('⚠️ All fields are required.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Fields',
+        text: '⚠️ All fields are required.',
+      });
       return;
     }
 
@@ -34,23 +39,42 @@ export class AdminPanel {
 
     const url = `${environment.backendUrl}/api/admin/login`;
 
+    // Show loading indicator
     this.isLoading = true;
+    Swal.fire({
+      title: 'Logging in...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
     this.http.post<{ success: boolean; message: string }>(url, loginPayload).subscribe({
       next: (response) => {
         this.isLoading = false;
+        Swal.close();
 
         if (response.success) {
           localStorage.setItem('role', this.selectedRole);
           this.router.navigate(['/dashboard']);
         } else {
-          alert('❌ ' + response.message);
+          Swal.fire({
+            icon: 'error',
+            title: 'Login Failed',
+            text: '❌ ' + response.message,
+          });
         }
       },
       error: (err) => {
         this.isLoading = false;
+        Swal.close();
         console.error('Login failed:', err);
-        alert('❌ Login failed. Please try again later.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Error',
+          text: '❌ Login failed. Please try again later.',
+        });
       }
     });
   }

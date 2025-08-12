@@ -1,5 +1,6 @@
 <!-- Top Navbar as a Component -->
 <app-navbar [role]="role" [isLoggedIn]="true" (logoutEvent)="logout()"></app-navbar>
+
 <!-- Main Layout -->
 <div class="d-flex" style="min-height: 100vh; background-color: #f8f9fa;">
   <!-- Sidebar -->
@@ -13,7 +14,7 @@
         <a class="nav-link text-dark fw-semibold" [routerLink]="'/reports'" routerLinkActive="active">📊 Reports</a>
       </li>
       <li class="nav-item">
-        <a *ngIf="role === 'SA'"  class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
+        <a *ngIf="role === 'SA'" class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
       </li>
     </ul>
   </aside>
@@ -37,8 +38,20 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of firebaseData; index as i" class="text-center">
-                <td>{{ i + 1 }}</td>
+              <tr *ngFor="let item of firebaseData" [attr.id]="'report-row-' + item.id" class="text-center">
+                <!-- Hidden div to capture as PDF -->
+                <td colspan="5" style="display: none;">
+                  <div [attr.id]="'report-content-' + item.id" style="padding: 20px; background: white; width: 100%;">
+                    <h3>Accident Report</h3>
+                    <p><strong>Accident Type:</strong> {{ item.accident_type || 'N/A' }}</p>
+                    <p><strong>Status:</strong> {{ item.status }}</p>
+                    <p><strong>Timestamp:</strong> {{ item.timestamp | date: 'medium' }}</p>
+                    <p *ngIf="item.googleMapLink"><strong>Location:</strong> <a [href]="item.googleMapLink" target="_blank">{{ item.googleMapLink }}</a></p>
+                  </div>
+                </td>
+
+                <!-- Visible Table Row -->
+                <td>{{ firebaseData.indexOf(item) + 1 }}</td>
                 <td>{{ item.accident_type || 'N/A' }}</td>
                 <td>
                   <span class="badge bg-success" *ngIf="item.status === 'Rescued'">{{ item.status }}</span>
@@ -85,6 +98,55 @@
                     <!-- Invalid -->
                     <button mat-mini-fab style="background-color: #f44336; color: white;" (click)="markAsInvalid(item.id)" matTooltip="Mark as Invalid">
                       <mat-icon>cancel</mat-icon>
+                    </button>
+
+                    <!-- Print to PDF -->
+                    <button mat-mini-fab color="primary" (click)="triggerPrintToPDF(item)" matTooltip="Print Report">
+                      <mat-icon>picture_as_pdf</mat-icon>
+                    </button>
+
+                    <!-- Request buttons (only if NOT that department) -->
+                    <button *ngIf="role !== 'BFP'"
+                            mat-mini-fab color="primary"
+                            (click)="triggerPdfIncidentToBFP(item)"
+                            matTooltip="Request Incident Report to BFP">
+                      <mat-icon>description</mat-icon>
+                    </button>
+
+                    <button *ngIf="role !== 'MDRRMO'"
+                            mat-mini-fab color="primary"
+                            (click)="triggerPdfIncidentToMDRRMO(item)"
+                            matTooltip="Request Incident Report to MDRRMO">
+                      <mat-icon>description</mat-icon>
+                    </button>
+
+                    <button *ngIf="role !== 'PNP'"
+                            mat-mini-fab color="primary"
+                            (click)="triggerPdfIncidentToPNP(item)"
+                            matTooltip="Request Incident Report to PNP">
+                      <mat-icon>description</mat-icon>
+                    </button>
+
+                    <!-- Accept buttons (only if this.role matches requested department) -->
+                    <button *ngIf="item.requestedTo === 'MDRRMO' && role === 'MDRRMO'"
+                            mat-mini-fab color="accent"
+                            (click)="acceptPdfRequestIncidentFromMDRRMO(item)"
+                            matTooltip="Accept Incident Report From MDRRMO">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+
+                    <button *ngIf="item.requestedTo === 'BFP' && role === 'BFP'"
+                            mat-mini-fab color="accent"
+                            (click)="acceptPdfRequestIncidentFromBFP(item)"
+                            matTooltip="Accept Incident Report From BFP">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+
+                    <button *ngIf="item.requestedTo === 'PNP' && role === 'PNP'"
+                            mat-mini-fab color="accent"
+                            (click)="acceptPdfRequestIncidentFromPNP(item)"
+                            matTooltip="Accept Incident Report From PNP">
+                      <mat-icon>check_circle</mat-icon>
                     </button>
 
                   </div>

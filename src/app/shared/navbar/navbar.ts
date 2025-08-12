@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FeedbackDialog } from '../../feedback-dialog/feedback-dialog'; // adjust path as needed
+import { ChangeAccountDialog } from '../../change-account-dialog/change-account-dialog'; // new dialog
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, FeedbackDialog],
+  imports: [CommonModule, MatDialogModule, FeedbackDialog, ChangeAccountDialog],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.scss']
 })
@@ -23,7 +24,7 @@ export class NavbarComponent {
   }
 
   canAccessFeedback(): boolean {
-    return ['PNP', 'BFP', 'MDRRMO'].includes(this.role);
+    return ['PNP', 'BFP', 'MDRRMO'].includes(this.role); // only these roles can access feedback
   }
 
   openFeedbackDialog(): void {
@@ -47,7 +48,6 @@ export class NavbarComponent {
           ticket: ticket
         };
 
-        // Firebase POST (replace with correct path if needed)
         fetch('https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json', {
           method: 'POST',
           body: JSON.stringify(payload)
@@ -56,6 +56,21 @@ export class NavbarComponent {
         }).catch(() => {
           alert('❌ Failed to submit feedback');
         });
+      }
+    });
+  }
+
+  openAccountDialog(): void {
+    const dialogRef = this.dialog.open(ChangeAccountDialog, {
+      width: '400px',
+      data: { role: this.role }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.username || result?.password) {
+        console.log('🔄 Updating account with:', result);
+        // TODO: Replace with Firebase Auth or backend API call to update user info
+        alert('✅ Account details updated successfully.');
       }
     });
   }
