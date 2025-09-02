@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Pending Requests</h2>
+<mat-dialog-content>
+  <table mat-table [dataSource]="requests" class="mat-elevation-z8" style="width:100%">
+    <ng-container matColumnDef="incident_id">
+      <th mat-header-cell *matHeaderCellDef>Incident ID</th>
+      <td mat-cell *matCellDef="let req">{{ req.incident_id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="from_role">
+      <th mat-header-cell *matHeaderCellDef>From Role</th>
+      <td mat-cell *matCellDef="let req">{{ req.from_role }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let req">{{ req.status }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="action">
+      <th mat-header-cell *matHeaderCellDef>Action</th>
+      <td mat-cell *matCellDef="let req">
+        <button mat-raised-button color="primary" (click)="approveRequest(req.id)">
+          Approve
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="['incident_id', 'from_role', 'status', 'action']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['incident_id', 'from_role', 'status', 'action'];"></tr>
+  </table>
+
+  <p *ngIf="requests.length === 0">No pending requests for your role.</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

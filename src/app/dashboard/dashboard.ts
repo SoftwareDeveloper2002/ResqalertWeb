@@ -325,7 +325,7 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
 
     const heatmap = new window.google.maps.visualization.HeatmapLayer({
       data: heatmapData,
-      radius: 12,// gaano kalaki ang circle ng heatmap
+      radius: 15,// gaano kalaki ang circle ng heatmap
       opacity: 0.7 // opacity ng heatmap
     });
 

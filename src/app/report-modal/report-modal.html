@@ -1,0 +1,20 @@
+<h2 mat-dialog-title>Incident Report</h2>
+
+<mat-dialog-content [formGroup]="reportForm">
+  <mat-form-field appearance="fill" class="w-full">
+    <mat-label>Title</mat-label>
+    <input matInput formControlName="title" placeholder="Enter report title" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="w-full mt-2">
+    <mat-label>Description</mat-label>
+    <textarea matInput formControlName="description" rows="4" placeholder="Enter report description"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-raised-button color="primary" [disabled]="reportForm.invalid" (click)="saveReport()">
+    Save
+  </button>
+</mat-dialog-actions>

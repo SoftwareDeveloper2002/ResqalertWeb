@@ -16,6 +16,7 @@ import Swal from 'sweetalert2';
 export class AdminPanel {
   username = '';
   password = '';
+  bgImage = '/assets/edt.jpg';
   selectedRole = ''; // e.g., 'PNP', 'BFP', 'MDRRMO'
   isLoading = false;
 

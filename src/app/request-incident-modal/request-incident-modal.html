@@ -1,0 +1,61 @@
+<div class="p-4 w-[500px] max-w-full">
+  <!-- Search Field -->
+  <mat-form-field appearance="outline" class="w-full mb-4">
+    <mat-label>Search Incident by ID / Index</mat-label>
+    <input matInput [(ngModel)]="searchId" placeholder="Enter Incident ID or Number">
+    <button *ngIf="searchId" matSuffix mat-icon-button aria-label="Clear" (click)="searchId=''; item=null">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <div class="flex justify-end mb-4">
+    <button mat-raised-button color="primary" (click)="findIncidentById()">
+      <mat-icon>search</mat-icon>
+      Search
+    </button>
+  </div>
+
+  <!-- Incident Details -->
+  <mat-card *ngIf="item" class="shadow-lg rounded-xl">
+    <mat-card-header>
+      <div mat-card-avatar class="bg-blue-500 text-white flex items-center justify-center rounded-full w-10 h-10">
+        <mat-icon>report</mat-icon>
+      </div>
+      <mat-card-title>{{ item?.accident_type?.join(', ') || 'Unknown Type' }}</mat-card-title>
+      <mat-card-subtitle>Status: {{ item?.status }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <img *ngIf="item?.media_url"
+         mat-card-image
+         [src]="item?.media_url"
+         alt="Incident media"
+         class="max-h-[250px] object-cover">
+
+    <mat-card-content>
+      <p><strong>Date:</strong> {{ item?.timestamp | date: 'medium' }}</p>
+      <p><strong>Latitude:</strong> {{ item?.latitude }}</p>
+      <p><strong>Longitude:</strong> {{ item?.longitude }}</p>
+    </mat-card-content>
+
+    <mat-card-actions align="end" class="flex flex-wrap gap-2 mt-2">
+      <!-- Role-specific request buttons -->
+      <button
+        *ngFor="let role of item?.flag"
+        mat-raised-button
+        color="accent"
+        (click)="request(role)">
+        Request {{ role }}
+      </button>
+
+      <button mat-stroked-button color="warn" (click)="close()">
+        Cancel
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- No Results -->
+  <div *ngIf="!item && searchId" class="text-center mt-6 text-gray-600">
+    <mat-icon>info</mat-icon>
+    <p>No incident found for the given ID.</p>
+  </div>
+</div>

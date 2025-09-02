@@ -18,11 +18,18 @@
       </li>
     </ul>
   </aside>
-
   <!-- Content Area -->
   <main class="flex-fill p-4">
     <h5 class="fw-bold text-primary mb-4">📈 Report</h5>
+    <app-report-count></app-report-count>
+<button mat-raised-button color="primary" (click)="openRequestIncidentModal()">
+  Open Request Incident
+</button>
+<button mat-raised-button color="primary" (click)="openRequestModal(role)">
+  View Requests
+</button>
 
+    <br>
     <!-- Data Table -->
     <div class="card shadow-sm border-0 rounded-3">
       <div class="card-body">
@@ -103,28 +110,6 @@
                     <!-- Print to PDF -->
                     <button mat-mini-fab color="primary" (click)="triggerPrintToPDF(item)" matTooltip="Print Report">
                       <mat-icon>picture_as_pdf</mat-icon>
-                    </button>
-
-                    <!-- Request buttons (only if NOT that department) -->
-                    <button *ngIf="role !== 'BFP'"
-                            mat-mini-fab color="primary"
-                            (click)="triggerPdfIncidentToBFP(item)"
-                            matTooltip="Request Incident Report to BFP">
-                      <mat-icon>description</mat-icon>
-                    </button>
-
-                    <button *ngIf="role !== 'MDRRMO'"
-                            mat-mini-fab color="primary"
-                            (click)="triggerPdfIncidentToMDRRMO(item)"
-                            matTooltip="Request Incident Report to MDRRMO">
-                      <mat-icon>description</mat-icon>
-                    </button>
-
-                    <button *ngIf="role !== 'PNP'"
-                            mat-mini-fab color="primary"
-                            (click)="triggerPdfIncidentToPNP(item)"
-                            matTooltip="Request Incident Report to PNP">
-                      <mat-icon>description</mat-icon>
                     </button>
 
                     <!-- Accept buttons (only if this.role matches requested department) -->

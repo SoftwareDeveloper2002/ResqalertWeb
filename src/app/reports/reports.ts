@@ -18,7 +18,9 @@ import { firstValueFrom } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { handleIncidentPdfRequest, IncidentOffice } from './incident-pdf-actions';
-
+import { ReportCountComponent } from "../report-count.component/report-count.component";
+import { RequestIncidentModalComponent } from '../request-incident-modal/request-incident-modal';
+import { RequestGetModalComponent } from '../request-get-modal/request-get-modal'
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -37,8 +39,9 @@ import { handleIncidentPdfRequest, IncidentOffice } from './incident-pdf-actions
     FeedbackDialog,
     NavbarComponent,
     IncidentDetailsDialog,
-
-  ],
+    ReportCountComponent,
+    RequestIncidentModalComponent
+],
   templateUrl: './reports.html',
   styleUrls: ['./reports.scss']
 })
@@ -532,6 +535,24 @@ export class Reports implements OnInit {
     doc.save(fileName);
   }
 
+  openRequestIncidentModal(): void {
+    this.dialog.open(RequestIncidentModalComponent, {
+      width: '500px',
+      data: { role: this.role }
+    });
+  }
+
+  openRequestModal(role: string) {
+  const dialogRef = this.dialog.open(RequestGetModalComponent, {
+    width: '600px',
+    data: { role }  // pass the current user role
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    console.log('Request modal closed', result);
+  });
+}
+
 
   logout(): void {
     this.router.navigate(['/login']);
@@ -544,4 +565,5 @@ export class Reports implements OnInit {
 function openIncidentPdfForAgency(item: any, any: any, agency: any, string: any, status: string, arg5: string) {
   throw new Error('Function not implemented.');
 }
+
 
