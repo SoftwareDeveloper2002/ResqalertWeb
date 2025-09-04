@@ -1,9 +1,9 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { CommonModule, DatePipe } from '@angular/common';
-
+import { DragDropModule } from '@angular/cdk/drag-drop';
 // ✅ Angular Material modules
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -20,14 +20,15 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './request-incident-modal.html',
   styleUrls: ['./request-incident-modal.scss'],
   imports: [
-    CommonModule,           // 👈 Needed for *ngIf, *ngFor, pipes, etc.
-    FormsModule,            // for [(ngModel)]
-    MatFormFieldModule,     // for <mat-form-field>
-    MatInputModule,         // for matInput
-    MatButtonModule,        // for <button mat-button>
-    MatCardModule,          // for <mat-card>
-    MatIconModule,          // for <mat-icon>
-    DatePipe
+    CommonModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    DatePipe,
+    DragDropModule
   ]
 })
 export class RequestIncidentModalComponent {
@@ -40,50 +41,56 @@ export class RequestIncidentModalComponent {
     public dialogRef: MatDialogRef<RequestIncidentModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.role = data?.role || '';
+    // Use role from dialog data OR fallback to localStorage
+    this.role = data?.role || localStorage.getItem('role') || '';
   }
 
   close(): void {
     this.dialogRef.close();
   }
 
-  // 🔎 Find incident by ID
+  // 🔎 Find incident by numeric index OR Firebase ID with role filtering
   findIncidentById(): void {
     if (!this.searchId) return;
 
-    this.http.get(`${environment.backendUrl}/api/report/reports/${this.searchId}`).subscribe({
-      next: (report: any) => {
-        this.item = report;
-      },
-      error: () => {
-        this.item = null;
-        alert('Incident not found');
-      }
-    });
+    const params = new HttpParams().set('role', this.role);
+
+    this.http.get(`${environment.backendUrl}/api/report/reports/${this.searchId}`, { params })
+      .subscribe({
+        next: (report: any) => {
+          this.item = report;
+        },
+        error: (err) => {
+          console.error('Failed to load report:', err);
+          this.item = null;
+          alert('Incident not found or not accessible for your role');
+        }
+      });
   }
 
-  // 📌 Make a request entry in "requests" collection
+  // 📌 Send a request entry to "requests" collection
   request(target: string): void {
     if (!this.item) return;
 
     const payload = {
       incident_id: this.item.id,
-      from_role: this.role,    // user making the request
-      to_role: target,         // department / target role
+      from_role: this.role,
+      to_role: target,
       status: 'Pending',
       timestamp: Date.now()
     };
 
-    this.http.post(`${environment.backendUrl}/api/report/requests`, payload).subscribe({
-      next: () => {
-        alert(`✅ Request sent to ${target}`);
-        this.dialogRef.close();
-      },
-      error: () => alert(`❌ Failed to send request to ${target}`)
-    });
+    this.http.post(`${environment.backendUrl}/api/report/requests`, payload)
+      .subscribe({
+        next: () => {
+          alert(`✅ Request sent to ${target}`);
+          this.dialogRef.close();
+        },
+        error: () => alert(`❌ Failed to send request to ${target}`)
+      });
   }
 
-  // ✅ Check if role is available for this incident
+  // ✅ Check if a role flag is available for this incident
   isRoleAvailable(role: string): boolean {
     if (!this.item) return false;
     return Array.isArray(this.item.flag) && this.item.flag.includes(role);

@@ -22,12 +22,17 @@
   <main class="flex-fill p-4">
     <h5 class="fw-bold text-primary mb-4">📈 Report</h5>
     <app-report-count></app-report-count>
-<button mat-raised-button color="primary" (click)="openRequestIncidentModal()">
-  Open Request Incident
-</button>
-<button mat-raised-button color="primary" (click)="openRequestModal(role)">
-  View Requests
-</button>
+    <div class="request-actions">
+      <button mat-raised-button color="primary" (click)="openRequestIncidentModal()">
+        <mat-icon>add_circle</mat-icon>
+        Open Request Incident
+      </button>
+
+      <button mat-raised-button color="accent" (click)="openRequestModal(role)">
+        <mat-icon>list_alt</mat-icon>
+        View Requests
+      </button>
+    </div>
 
     <br>
     <!-- Data Table -->
@@ -37,7 +42,7 @@
           <table class="table align-middle table-hover">
             <thead class="table-light">
               <tr class="text-center text-uppercase small">
-                <th>#</th>
+                <th>Incident #</th>
                 <th>Accident Type</th>
                 <th>Status</th>
                 <th>Timestamp</th>
@@ -45,7 +50,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of firebaseData" [attr.id]="'report-row-' + item.id" class="text-center">
+              <tr *ngFor="let item of firebaseData; let i = index" [attr.id]="'report-row-' + item.id" class="text-center">
                 <!-- Hidden div to capture as PDF -->
                 <td colspan="5" style="display: none;">
                   <div [attr.id]="'report-content-' + item.id" style="padding: 20px; background: white; width: 100%;">
@@ -58,7 +63,7 @@
                 </td>
 
                 <!-- Visible Table Row -->
-                <td>{{ firebaseData.indexOf(item) + 1 }}</td>
+                <td>{{ firebaseData.length - i }}</td>
                 <td>{{ item.accident_type || 'N/A' }}</td>
                 <td>
                   <span class="badge bg-success" *ngIf="item.status === 'Rescued'">{{ item.status }}</span>

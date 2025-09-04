@@ -1,61 +1,98 @@
-<div class="p-4 w-[500px] max-w-full">
-  <!-- Search Field -->
-  <mat-form-field appearance="outline" class="w-full mb-4">
-    <mat-label>Search Incident by ID / Index</mat-label>
-    <input matInput [(ngModel)]="searchId" placeholder="Enter Incident ID or Number">
-    <button *ngIf="searchId" matSuffix mat-icon-button aria-label="Clear" (click)="searchId=''; item=null">
-      <mat-icon>close</mat-icon>
-    </button>
-  </mat-form-field>
+<!-- Make the entire container draggable -->
+<div
+  class="incident-container mat-elevation-z4 p-6 rounded-xl bg-white shadow-lg max-w-4xl mx-auto cursor-move"
+  cdkDrag
+  cdkDragRootElement=".cdk-overlay-pane"
+>
 
-  <div class="flex justify-end mb-4">
-    <button mat-raised-button color="primary" (click)="findIncidentById()">
+  <!-- Drag Handle (only drag by this header) -->
+  <div class="drag-handle flex items-center gap-2 mb-4" cdkDragHandle>
+    <mat-icon>drag_handle</mat-icon>
+    <span class="font-semibold text-lg">Incident Details</span>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section flex flex-col sm:flex-row gap-4 mb-6">
+    <mat-form-field appearance="outline" class="flex-1 w-full">
+      <mat-label>Search Incident by ID / Index</mat-label>
+      <input matInput [(ngModel)]="searchId" placeholder="Enter Incident ID or Number">
+      <button *ngIf="searchId" matSuffix mat-icon-button aria-label="Clear" (click)="searchId=''; item=null">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" class="h-12" (click)="findIncidentById()">
       <mat-icon>search</mat-icon>
       Search
     </button>
   </div>
 
-  <!-- Incident Details -->
-  <mat-card *ngIf="item" class="shadow-lg rounded-xl">
-    <mat-card-header>
-      <div mat-card-avatar class="bg-blue-500 text-white flex items-center justify-center rounded-full w-10 h-10">
-        <mat-icon>report</mat-icon>
+  <!-- Incident Card -->
+  <mat-card *ngIf="item" class="incident-card grid grid-cols-1 sm:grid-cols-3 gap-4 p-4">
+
+    <!-- Left: Media Thumbnail (keep image size) -->
+    <div class="media-container col-span-1 flex justify-center items-center">
+      <a *ngIf="item?.media_url"
+         [href]="item?.media_url"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="thumbnail-link">
+        <img [src]="item?.media_url" alt="Incident media">
+      </a>
+      <div *ngIf="!item?.media_url" class="text-gray-400 flex items-center justify-center h-full">
+        <mat-icon class="text-4xl">image_not_supported</mat-icon>
+        <span class="ml-2">No Media</span>
       </div>
-      <mat-card-title>{{ item?.accident_type?.join(', ') || 'Unknown Type' }}</mat-card-title>
-      <mat-card-subtitle>Status: {{ item?.status }}</mat-card-subtitle>
-    </mat-card-header>
+    </div>
 
-    <img *ngIf="item?.media_url"
-         mat-card-image
-         [src]="item?.media_url"
-         alt="Incident media"
-         class="max-h-[250px] object-cover">
+    <!-- Right: Details and Actions -->
+    <div class="col-span-2 flex flex-col justify-between">
 
-    <mat-card-content>
-      <p><strong>Date:</strong> {{ item?.timestamp | date: 'medium' }}</p>
-      <p><strong>Latitude:</strong> {{ item?.latitude }}</p>
-      <p><strong>Longitude:</strong> {{ item?.longitude }}</p>
-    </mat-card-content>
+      <!-- Header -->
+      <div class="flex items-center gap-4 mb-4">
+        <div class="incident-avatar bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center">
+          <mat-icon color="primary">report</mat-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold">{{ item?.accident_type?.join(', ') || 'Unknown Type' }}</h3>
+          <p class="text-sm text-gray-500">
+            Status: <span class="font-medium">{{ item?.status }}</span>
+          </p>
+        </div>
+      </div>
 
-    <mat-card-actions align="end" class="flex flex-wrap gap-2 mt-2">
-      <!-- Role-specific request buttons -->
-      <button
-        *ngFor="let role of item?.flag"
-        mat-raised-button
-        color="accent"
-        (click)="request(role)">
-        Request {{ role }}
-      </button>
+      <!-- Content -->
+      <div class="incident-content mb-4 text-gray-700">
+        <p><strong>Date:</strong> {{ item?.timestamp | date:'medium' }}</p>
+        <p><strong>Latitude:</strong> {{ item?.latitude }}</p>
+        <p><strong>Longitude:</strong> {{ item?.longitude }}</p>
+      </div>
 
-      <button mat-stroked-button color="warn" (click)="close()">
-        Cancel
-      </button>
-    </mat-card-actions>
+      <!-- Actions -->
+      <div class="incident-actions flex flex-wrap gap-3 mt-4">
+        <ng-container *ngFor="let r of item?.flag">
+          <button
+            *ngIf="r !== role"
+            mat-stroked-button
+            color="accent"
+            class="flex-1 sm:flex-none"
+            (click)="request(r)">
+            Request {{ r }}
+          </button>
+        </ng-container>
+
+        <button mat-stroked-button color="warn" class="flex-1 sm:flex-none" (click)="close()">
+          Cancel
+        </button>
+      </div>
+
+    </div>
   </mat-card>
 
-  <!-- No Results -->
-  <div *ngIf="!item && searchId" class="text-center mt-6 text-gray-600">
-    <mat-icon>info</mat-icon>
-    <p>No incident found for the given ID.</p>
+  <!-- No Results Message -->
+  <div *ngIf="!item && searchId" class="text-center mt-8 text-gray-500 flex flex-col items-center gap-2">
+    <mat-icon color="warn" class="text-4xl">info</mat-icon>
+    <p class="text-lg">No incident found for the given ID.</p>
   </div>
+
 </div>

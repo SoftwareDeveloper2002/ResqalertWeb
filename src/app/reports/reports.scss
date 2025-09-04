@@ -162,3 +162,27 @@
   }
 }
 
+.request-actions {
+  display: flex;
+  justify-content: center; /* center the buttons */
+  gap: 1rem; /* spacing between buttons */
+  margin-top: 1.5rem;
+  flex-wrap: wrap; /* responsive wrap for smaller screens */
+}
+
+.request-actions button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* space between icon and text */
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.75rem; /* softer corners */
+  font-weight: 600;
+  text-transform: none; /* keep normal text instead of uppercase */
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s ease-in-out;
+}
+
+.request-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+}
