@@ -12,20 +12,40 @@
   </div>
 
   <!-- Search Section -->
-  <div class="search-section flex flex-col sm:flex-row gap-4 mb-6">
-    <mat-form-field appearance="outline" class="flex-1 w-full">
-      <mat-label>Search Incident by ID / Index</mat-label>
-      <input matInput [(ngModel)]="searchId" placeholder="Enter Incident ID or Number">
-      <button *ngIf="searchId" matSuffix mat-icon-button aria-label="Clear" (click)="searchId=''; item=null">
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
+  <div class="search-section flex flex-col sm:flex-row gap-4 mb-6 items-center">
 
-    <button mat-raised-button color="primary" class="h-12" (click)="findIncidentById()">
-      <mat-icon>search</mat-icon>
-      Search
+  <!-- Search Input -->
+  <mat-form-field class="flex-1 w-full">
+    <mat-label class="text-gray-700 font-medium">Search Incident by ID / Index</mat-label>
+    <input
+      matInput
+      [(ngModel)]="searchId"
+      placeholder="Enter Incident ID or Number"
+      class="rounded-lg border border-gray-300 text-gray-700 px-3 py-2 focus:border-blue-500 focus:ring focus:ring-blue-100"
+    >
+    <button
+      *ngIf="searchId"
+      matSuffix
+      mat-icon-button
+      aria-label="Clear"
+      (click)="searchId=''; item=null"
+      class="text-blue-500 hover:text-black-700"
+    >
+      <mat-icon>close</mat-icon>
     </button>
-  </div>
+  </mat-form-field>
+
+  <!-- Search Button -->
+  <button
+    mat-raised-button
+    (click)="findIncidentById()"
+    class="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-black font-semibold rounded-lg shadow transition transform hover:-translate-y-1"
+  >
+    <mat-icon>search</mat-icon>
+    Search
+  </button>
+
+</div>
 
   <!-- Incident Card -->
   <mat-card *ngIf="item" class="incident-card grid grid-cols-1 sm:grid-cols-3 gap-4 p-4">

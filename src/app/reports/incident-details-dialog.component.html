@@ -1,26 +1,70 @@
-<h1 mat-dialog-title>Enter Report Details</h1>
-<div mat-dialog-content>
-  <mat-form-field appearance="fill" class="w-100">
+<h1 mat-dialog-title class="text-xl font-semibold text-gray-800 mb-4">Enter Report Details</h1>
+
+<div mat-dialog-content class="space-y-4">
+
+  <!-- Details -->
+  <mat-form-field appearance="fill" class="w-full">
     <mat-label>Details</mat-label>
-    <textarea matInput [(ngModel)]="formData.details"></textarea>
+    <textarea
+      matInput
+      [(ngModel)]="formData.details"
+      rows="4"
+      class="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-100 text-gray-700 p-2"
+      placeholder="Enter incident details here"
+    ></textarea>
   </mat-form-field>
 
-  <mat-form-field appearance="fill" class="w-100">
+  <!-- Who's Involved -->
+  <mat-form-field appearance="fill" class="w-full">
     <mat-label>Who's Involved</mat-label>
-    <input matInput [(ngModel)]="formData.whosInvolved" />
+    <input
+      matInput
+      [(ngModel)]="formData.whosInvolved"
+      class="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-100 text-gray-700 p-2"
+      placeholder="E.g., John Doe, Jane Smith"
+    />
   </mat-form-field>
 
-  <mat-form-field appearance="fill" class="w-100">
+  <!-- People Involved -->
+  <mat-form-field appearance="fill" class="w-full">
     <mat-label>People Involved</mat-label>
-    <input matInput [(ngModel)]="formData.peopleInvolved" />
+    <input
+      matInput
+      [(ngModel)]="formData.peopleInvolved"
+      class="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-100 text-gray-700 p-2"
+      placeholder="Names or roles of people involved"
+    />
   </mat-form-field>
 
-  <mat-form-field appearance="fill" class="w-100">
+  <!-- Notes -->
+  <mat-form-field appearance="fill" class="w-full">
     <mat-label>Notes</mat-label>
-    <textarea matInput [(ngModel)]="formData.notes"></textarea>
+    <textarea
+      matInput
+      [(ngModel)]="formData.notes"
+      rows="3"
+      class="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-100 text-gray-700 p-2"
+      placeholder="Additional notes..."
+    ></textarea>
   </mat-form-field>
+
 </div>
-<div mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="generatePDF()">Generate PDF</button>
+
+<div mat-dialog-actions align="end" class="mt-4 space-x-2">
+  <button
+    mat-button
+    class="text-gray-700 hover:text-gray-900 font-medium"
+    (click)="cancel()"
+  >
+    Cancel
+  </button>
+
+  <button
+    mat-raised-button
+    color="primary"
+    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-5 py-2 shadow transition transform hover:-translate-y-0.5"
+    (click)="generatePDF()"
+  >
+    Generate PDF
+  </button>
 </div>

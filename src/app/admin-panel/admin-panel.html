@@ -1,10 +1,25 @@
-<div class="page-wrapper">
-  <div class="login-container">
-    <h2 class="title">ADMIN LOGIN</h2>
-    <form (ngSubmit)="onLogin()">
-      <div class="form-group">
-        <label for="role">Role</label>
-        <select id="role" [(ngModel)]="selectedRole" name="selectedRole" required>
+<!-- Page Wrapper with Background Image -->
+<div class="min-h-screen bg-cover bg-center flex items-center justify-center" style="background-image: url('edt2.jpg');">
+
+  <!-- Glassmorphism Login Container -->
+  <div class="w-full max-w-md bg-white/30 backdrop-blur-md rounded-2xl shadow-lg p-8 space-y-6">
+
+    <!-- Title -->
+    <h2 class="text-3xl font-extrabold text-center text-white drop-shadow-md">ADMIN LOGIN</h2>
+
+    <!-- Form -->
+    <form (ngSubmit)="onLogin()" class="space-y-4">
+
+      <!-- Role Selector -->
+      <div class="flex flex-col">
+        <label for="role" class="mb-2 text-white font-medium drop-shadow">Role</label>
+        <select
+          id="role"
+          [(ngModel)]="selectedRole"
+          name="selectedRole"
+          required
+          class="px-4 py-2 bg-white/40 border border-white/50 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
           <option value="" disabled selected>Select role</option>
           <option value="PNP">PNP</option>
           <option value="BFP">BFP</option>
@@ -13,21 +28,46 @@
         </select>
       </div>
 
-      <div *ngIf="isLoading" class="spinner-overlay">
-        <div class="spinner"></div>
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="flex justify-center">
+        <div class="w-8 h-8 border-4 border-white/50 border-t-blue-400 rounded-full animate-spin"></div>
       </div>
 
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" [(ngModel)]="username" name="username" required />
+      <!-- Username -->
+      <div class="flex flex-col">
+        <label for="username" class="mb-2 text-white font-medium drop-shadow">Username</label>
+        <input
+          type="text"
+          id="username"
+          [(ngModel)]="username"
+          name="username"
+          required
+          class="px-4 py-2 bg-white/40 border border-white/50 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        />
       </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" [(ngModel)]="password" name="password" required />
+      <!-- Password -->
+      <div class="flex flex-col">
+        <label for="password" class="mb-2 text-white font-medium drop-shadow">Password</label>
+        <input
+          type="password"
+          id="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          class="px-4 py-2 bg-white/40 border border-white/50 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        />
       </div>
 
-      <button type="submit">Login</button>
+      <!-- Login Button -->
+      <button
+  type="submit"
+  class="w-full h-12 bg-pink-500 hover:bg-red-600 text-white font-semibold !rounded-full shadow-md transition-all duration-300"
+>
+  Login
+</button>
+
+
     </form>
   </div>
 </div>

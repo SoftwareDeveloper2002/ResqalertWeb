@@ -1,154 +1,138 @@
-<!-- Top Navbar as a Component -->
+<!-- Top Navbar Component -->
 <app-navbar [role]="role" [isLoggedIn]="true" (logoutEvent)="logout()"></app-navbar>
 
 <!-- Main Layout -->
-<div class="d-flex" style="min-height: 100vh; background-color: #f8f9fa;">
+<div class="flex min-h-screen bg-gray-100">
+
   <!-- Sidebar -->
-  <aside class="bg-white border-end p-4 shadow-sm" style="width: 250px;">
-    <h6 class="fw-bold mb-4 text-primary">📂 Navigation</h6>
-    <ul class="nav flex-column gap-2">
-      <li class="nav-item">
-        <a class="nav-link text-dark fw-semibold" [routerLink]="'/dashboard'" routerLinkActive="active">🏠 Dashboard</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-dark fw-semibold" [routerLink]="'/reports'" routerLinkActive="active">📊 Reports</a>
-      </li>
-      <li class="nav-item">
-        <a *ngIf="role === 'SA'" class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
-      </li>
-    </ul>
+  <aside class="w-64 bg-white shadow-lg p-6 flex flex-col">
+    <h6 class="text-xl font-bold mb-6 text-blue-600 flex items-center gap-2">📂 Navigation</h6>
+    <nav class="flex flex-col gap-3">
+      <a [routerLink]="'/dashboard'" routerLinkActive="bg-blue-100 text-blue-600" class="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 font-semibold flex items-center gap-2 transition">
+        🏠 Dashboard
+      </a>
+      <a [routerLink]="'/reports'" routerLinkActive="bg-blue-100 text-blue-600" class="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 font-semibold flex items-center gap-2 transition">
+        📊 Reports
+      </a>
+      <a *ngIf="role === 'SA'" routerLink="/feedback" routerLinkActive="bg-blue-100 text-blue-600" class="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 font-semibold flex items-center gap-2 transition">
+        📝 Feedback
+      </a>
+    </nav>
   </aside>
+
   <!-- Content Area -->
-  <main class="flex-fill p-4">
-    <h5 class="fw-bold text-primary mb-4">📈 Report</h5>
-    <app-report-count></app-report-count>
-    <div class="request-actions">
-      <button mat-raised-button color="primary" (click)="openRequestIncidentModal()">
-        <mat-icon>add_circle</mat-icon>
-        Open Request Incident
-      </button>
+  <main class="flex-1 p-6 space-y-6">
 
-      <button mat-raised-button color="accent" (click)="openRequestModal(role)">
-        <mat-icon>list_alt</mat-icon>
-        View Requests
-      </button>
-    </div>
-
-    <br>
-    <!-- Data Table -->
-    <div class="card shadow-sm border-0 rounded-3">
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table align-middle table-hover">
-            <thead class="table-light">
-              <tr class="text-center text-uppercase small">
-                <th>Incident #</th>
-                <th>Accident Type</th>
-                <th>Status</th>
-                <th>Timestamp</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of firebaseData; let i = index" [attr.id]="'report-row-' + item.id" class="text-center">
-                <!-- Hidden div to capture as PDF -->
-                <td colspan="5" style="display: none;">
-                  <div [attr.id]="'report-content-' + item.id" style="padding: 20px; background: white; width: 100%;">
-                    <h3>Accident Report</h3>
-                    <p><strong>Accident Type:</strong> {{ item.accident_type || 'N/A' }}</p>
-                    <p><strong>Status:</strong> {{ item.status }}</p>
-                    <p><strong>Timestamp:</strong> {{ item.timestamp | date: 'medium' }}</p>
-                    <p *ngIf="item.googleMapLink"><strong>Location:</strong> <a [href]="item.googleMapLink" target="_blank">{{ item.googleMapLink }}</a></p>
-                  </div>
-                </td>
-
-                <!-- Visible Table Row -->
-                <td>{{ firebaseData.length - i }}</td>
-                <td>{{ item.accident_type || 'N/A' }}</td>
-                <td>
-                  <span class="badge bg-success" *ngIf="item.status === 'Rescued'">{{ item.status }}</span>
-                  <span class="badge bg-danger" *ngIf="item.status === 'Invalid'">{{ item.status }}</span>
-                  <span class="badge bg-secondary" *ngIf="item.status !== 'Rescued' && item.status !== 'Invalid'">
-                    {{ item.status }}
-                  </span>
-                </td>
-                <td>{{ item.timestamp | date: 'medium' }}</td>
-                <td>
-                  <div class="d-flex justify-content-center gap-2 flex-wrap">
-
-                    <!-- Location Icon -->
-                    <ng-container *ngIf="item.googleMapLink">
-                      <a [href]="item.googleMapLink" target="_blank" matTooltip="View Location">
-                        <button mat-mini-fab color="primary">
-                          <mat-icon>location_on</mat-icon>
-                        </button>
-                      </a>
-                    </ng-container>
-
-                    <!-- Media Dialog Button -->
-                    <ng-container *ngIf="item.media_url; else noMedia">
-                      <button mat-mini-fab color="accent" (click)="openImageDialog(item.media_url)" matTooltip="View Image">
-                        <mat-icon>image</mat-icon>
-                      </button>
-                    </ng-container>
-                    <ng-template #noMedia>
-                      <button mat-mini-fab disabled color="warn" matTooltip="No Media Available">
-                        <mat-icon>image_not_supported</mat-icon>
-                      </button>
-                    </ng-template>
-
-                    <!-- Responding -->
-                    <button mat-mini-fab style="background-color: #ff9800; color: white;" (click)="markAsResponding(item.id)" matTooltip="Mark as Responding">
-                      <mat-icon>notification_important</mat-icon>
-                    </button>
-
-                    <!-- Rescued -->
-                    <button mat-mini-fab style="background-color: #4caf50; color: white;" (click)="markAsRescued(item.id)" matTooltip="Mark as Rescued">
-                      <mat-icon>check_circle</mat-icon>
-                    </button>
-
-                    <!-- Invalid -->
-                    <button mat-mini-fab style="background-color: #f44336; color: white;" (click)="markAsInvalid(item.id)" matTooltip="Mark as Invalid">
-                      <mat-icon>cancel</mat-icon>
-                    </button>
-
-                    <!-- Print to PDF -->
-                    <button mat-mini-fab color="primary" (click)="triggerPrintToPDF(item)" matTooltip="Print Report">
-                      <mat-icon>picture_as_pdf</mat-icon>
-                    </button>
-
-                    <!-- Accept buttons (only if this.role matches requested department) -->
-                    <button *ngIf="item.requestedTo === 'MDRRMO' && role === 'MDRRMO'"
-                            mat-mini-fab color="accent"
-                            (click)="acceptPdfRequestIncidentFromMDRRMO(item)"
-                            matTooltip="Accept Incident Report From MDRRMO">
-                      <mat-icon>check_circle</mat-icon>
-                    </button>
-
-                    <button *ngIf="item.requestedTo === 'BFP' && role === 'BFP'"
-                            mat-mini-fab color="accent"
-                            (click)="acceptPdfRequestIncidentFromBFP(item)"
-                            matTooltip="Accept Incident Report From BFP">
-                      <mat-icon>check_circle</mat-icon>
-                    </button>
-
-                    <button *ngIf="item.requestedTo === 'PNP' && role === 'PNP'"
-                            mat-mini-fab color="accent"
-                            (click)="acceptPdfRequestIncidentFromPNP(item)"
-                            matTooltip="Accept Incident Report From PNP">
-                      <mat-icon>check_circle</mat-icon>
-                    </button>
-
-                  </div>
-                </td>
-              </tr>
-              <tr *ngIf="firebaseData.length === 0">
-                <td colspan="5" class="text-center text-muted">No data available.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <!-- Report Header & Actions -->
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+      <h5 class="text-2xl font-bold text-blue-600">📈 Report</h5>
+      <div class="flex flex-wrap gap-3">
+        <!-- Open Incident Button -->
+        <button mat-raised-button
+                (click)="openRequestIncidentModal()"
+                class="flex items-center gap-2 px-5 py-2 !bg-gradient-to-r !from-blue-500 !to-blue-600
+                      hover:!from-blue-600 hover:!to-blue-700 text-white !rounded-full
+                      shadow-lg transition transform hover:-translate-y-1">
+          <mat-icon>add_circle</mat-icon> Open Request Incident
+        </button>
+        <!-- View Requests Button -->
+        <button (click)="openRequestModal(role)"
+                class="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-green-500 to-green-600
+                      hover:from-green-600 hover:to-green-700 text-white !rounded-full
+                      shadow-lg transition transform hover:-translate-y-1">
+          <mat-icon>list_alt</mat-icon> View Requests
+        </button>
       </div>
     </div>
+
+    <!-- Report Count Component -->
+    <app-report-count></app-report-count>
+
+    <!-- Data Table -->
+    <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr class="text-center uppercase font-semibold">
+            <th class="px-4 py-2">Incident #</th>
+            <th class="px-4 py-2">Accident Type</th>
+            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Timestamp</th>
+            <th class="px-4 py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-900">
+          <tr *ngFor="let item of firebaseData; let i = index" class="text-center hover:bg-gray-200 transition">
+
+            <!-- Hidden div for PDF capture -->
+            <td colspan="5" class="hidden">
+              <div [attr.id]="'report-content-' + item.id" class="p-5 bg-white w-full rounded-lg shadow">
+                <h3 class="font-bold text-lg mb-2">Accident Report</h3>
+                <p><strong>Accident Type:</strong> {{ item.accident_type || 'N/A' }}</p>
+                <p><strong>Status:</strong> {{ item.status }}</p>
+                <p><strong>Timestamp:</strong> {{ item.timestamp | date:'medium' }}</p>
+                <p *ngIf="item.googleMapLink"><strong>Location:</strong> <a [href]="item.googleMapLink" target="_blank" class="text-blue-600 underline">{{ item.googleMapLink }}</a></p>
+              </div>
+            </td>
+
+            <!-- Visible row -->
+            <td class="px-4 py-2">{{ firebaseData.length - i }}</td>
+            <td class="px-4 py-2">{{ item.accident_type || 'N/A' }}</td>
+            <td class="px-4 py-2">
+              <span *ngIf="item.status==='Rescued'" class="px-2 py-1 rounded-full bg-green-500 text-white text-xs font-semibold">Rescued</span>
+              <span *ngIf="item.status==='Invalid'" class="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-semibold">Invalid</span>
+              <span *ngIf="item.status!=='Rescued' && item.status!=='Invalid'" class="px-2 py-1 rounded-full bg-gray-400 text-white text-xs font-semibold">{{ item.status }}</span>
+            </td>
+            <td class="px-4 py-2">{{ item.timestamp | date:'medium' }}</td>
+
+            <!-- Action Icons -->
+            <td class="px-4 py-2">
+              <div class="flex flex-wrap justify-center gap-2">
+
+                <ng-container *ngIf="item.media_url; else noMedia">
+                  <mat-icon style="color: grey;" class="text-purple-500 hover:text-purple-700 cursor-pointer"
+                            (click)="openImageDialog(item.media_url)" matTooltip="View Image">image</mat-icon>
+                </ng-container>
+                <ng-template #noMedia>
+                  <mat-icon style="color: grey;" class="text-gray-900 cursor-not-allowed" matTooltip="No Media Available">image_not_supported</mat-icon>
+                </ng-template>
+
+                <!-- Status Actions -->
+                <mat-icon style="color: grey;" class="text-orange-500 hover:text-orange-700 cursor-pointer"
+                          (click)="markAsResponding(item.id)" matTooltip="Mark as Responding">notification_important</mat-icon>
+
+                <mat-icon style="color: grey;" class="cursor-pointer"
+                          (click)="markAsRescued(item.id)" matTooltip="Mark as Rescued">check_circle</mat-icon>
+
+                <mat-icon style="color: grey;" class="text-red-500 hover:text-red-700 cursor-pointer"
+                          (click)="markAsInvalid(item.id)" matTooltip="Mark as Invalid">cancel</mat-icon>
+
+                <!-- PDF -->
+                <mat-icon style="color: grey;" class="text-blue-700 hover:text-blue-900 cursor-pointer"
+                          (click)="triggerPrintToPDF(item)" matTooltip="Print Report">picture_as_pdf</mat-icon>
+
+                <!-- Department Accept Buttons (unchanged) -->
+                <button *ngIf="item.requestedTo==='MDRRMO' && role==='MDRRMO'" (click)="acceptPdfRequestIncidentFromMDRRMO(item)" matTooltip="Accept Incident Report From MDRRMO" class="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transform hover:scale-110 transition">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button *ngIf="item.requestedTo==='BFP' && role==='BFP'" (click)="acceptPdfRequestIncidentFromBFP(item)" matTooltip="Accept Incident Report From BFP" class="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transform hover:scale-110 transition">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button *ngIf="item.requestedTo==='PNP' && role==='PNP'" (click)="acceptPdfRequestIncidentFromPNP(item)" matTooltip="Accept Incident Report From PNP" class="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transform hover:scale-110 transition">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="firebaseData.length === 0">
+            <td colspan="5" class="text-center text-gray-400 py-4">No data available.</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
   </main>
 </div>
