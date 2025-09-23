@@ -20,12 +20,41 @@
       <form (ngSubmit)="updateAccount()">
         <div class="mb-3">
           <label for="username" class="form-label">Username</label>
-          <input id="username" class="form-control" [(ngModel)]="username" name="username" required />
+          <input
+            id="username"
+            class="form-control"
+            [(ngModel)]="username"
+            name="username"
+            required
+          />
         </div>
+
         <div class="mb-3">
           <label for="password" class="form-label">New Password</label>
-          <input id="password" type="password" class="form-control" [(ngModel)]="password" name="password" required />
+          <input
+            id="password"
+            type="password"
+            class="form-control"
+            [(ngModel)]="password"
+            name="password"
+            required
+          />
         </div>
+
+        <!-- 📱 Phone Number -->
+        <div class="mb-3">
+          <label for="phone" class="form-label">Phone Number</label>
+          <input
+            id="phone"
+            type="tel"
+            class="form-control"
+            [(ngModel)]="phoneNumber"
+            name="phone"
+            placeholder="+63 912 345 6789"
+            required
+          />
+        </div>
+
         <button class="btn btn-primary">💾 Save</button>
       </form>
     </div>

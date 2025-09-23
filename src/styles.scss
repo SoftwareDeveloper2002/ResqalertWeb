@@ -4,6 +4,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.custom-dialog {
+  @apply max-w-[900px] w-full;
+}
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .mat-mini-fab.orange { background-color: #ff9800; color: white; }

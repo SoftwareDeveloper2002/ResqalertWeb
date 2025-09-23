@@ -1,8 +1,10 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { FeedbackDialog } from '../../feedback-dialog/feedback-dialog'; // adjust path as needed
-import { ChangeAccountDialog } from '../../change-account-dialog/change-account-dialog'; // new dialog
+import { FeedbackDialog } from '../../feedback-dialog/feedback-dialog';
+import { ChangeAccountDialog } from '../../change-account-dialog/change-account-dialog';
+import { ref, onChildAdded, off } from 'firebase/database';
+import { db } from '../../firebase'; // ✅ use the initialized db
 
 @Component({
   selector: 'app-navbar',
@@ -11,20 +13,82 @@ import { ChangeAccountDialog } from '../../change-account-dialog/change-account-
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.scss']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   @Input() role: string = '';
   @Input() isLoggedIn: boolean = false;
   @Output() logoutEvent = new EventEmitter<void>();
 
   private dialog = inject(MatDialog);
+  private reportsRef = ref(db, 'reports'); // ✅ Firebase reports reference
+  private listener: any;
+
+  // 👇 State for notifications
+  showNewReportNotification: boolean = false;
+  newReportMessage: string = '';
+
+  ngOnInit(): void {
+    let initialLoad = true;
+
+    // ✅ unlock audio on first user click (due to browser autoplay restrictions)
+    document.addEventListener("click", () => {
+      const audio = document.getElementById("alert-audio") as HTMLAudioElement;
+      if (audio) {
+        audio.play().then(() => audio.pause()); // preload/unlock
+      }
+    }, { once: true });
+
+    // ✅ Listen for new reports
+    this.listener = onChildAdded(this.reportsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        if (initialLoad) {
+          return; // skip existing reports
+        }
+
+        const report = snapshot.val();
+        this.newReportMessage = `🚨 New report added: ${report?.title || 'Untitled Report'}`;
+        this.triggerAlert(); // ✅ play sound + show overlay
+      }
+    });
+
+    setTimeout(() => {
+      initialLoad = false;
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.listener) {
+      off(this.reportsRef, 'child_added', this.listener);
+    }
+  }
+
+  triggerAlert() {
+    this.showNewReportNotification = true;
+
+    const audio = document.getElementById("alert-audio") as HTMLAudioElement;
+    if (audio) {
+      audio.play().catch(err => {
+        console.warn("Autoplay blocked, waiting for user interaction:", err);
+      });
+    }
+  }
+
+  dismissNotification() {
+    this.showNewReportNotification = false;
+
+    const audio = document.getElementById("alert-audio") as HTMLAudioElement;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0; // rewind
+    }
+  }
 
   logout(): void {
     localStorage.clear();
-    this.logoutEvent.emit(); // let parent handle navigation
+    this.logoutEvent.emit();
   }
 
   canAccessFeedback(): boolean {
-    return ['PNP', 'BFP', 'MDRRMO'].includes(this.role); // only these roles can access feedback
+    return ['PNP', 'BFP', 'MDRRMO'].includes(this.role);
   }
 
   openFeedbackDialog(): void {
@@ -69,7 +133,6 @@ export class NavbarComponent {
     dialogRef.afterClosed().subscribe(result => {
       if (result?.username || result?.password) {
         console.log('🔄 Updating account with:', result);
-        // TODO: Replace with Firebase Auth or backend API call to update user info
         alert('✅ Account details updated successfully.');
       }
     });

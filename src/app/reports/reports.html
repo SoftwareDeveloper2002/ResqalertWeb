@@ -54,8 +54,8 @@
         <thead class="bg-gray-50">
           <tr class="text-center uppercase font-semibold">
             <th class="px-4 py-2">Incident #</th>
-            <th class="px-4 py-2">Accident Type</th>
-            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Untoward Incident</th>
+            <th class="px-4 py-2">Before, after, during</th>
             <th class="px-4 py-2">Timestamp</th>
             <th class="px-4 py-2">Action</th>
           </tr>
@@ -96,21 +96,21 @@
                   <mat-icon style="color: grey;" class="text-gray-900 cursor-not-allowed" matTooltip="No Media Available">image_not_supported</mat-icon>
                 </ng-template>
 
-                <!-- Status Actions -->
+                <!-- Status Actions with Swal Confirmation -->
                 <mat-icon style="color: grey;" class="text-orange-500 hover:text-orange-700 cursor-pointer"
-                          (click)="markAsResponding(item.id)" matTooltip="Mark as Responding">notification_important</mat-icon>
+                          (click)="confirmStatusChange(item.id, 'Responding')" matTooltip="Mark as Responding">fire_truck</mat-icon>
 
                 <mat-icon style="color: grey;" class="cursor-pointer"
-                          (click)="markAsRescued(item.id)" matTooltip="Mark as Rescued">check_circle</mat-icon>
+                          (click)="confirmStatusChange(item.id, 'Rescued')" matTooltip="Mark as Rescued">volunteer_activism</mat-icon>
 
                 <mat-icon style="color: grey;" class="text-red-500 hover:text-red-700 cursor-pointer"
-                          (click)="markAsInvalid(item.id)" matTooltip="Mark as Invalid">cancel</mat-icon>
+                          (click)="confirmStatusChange(item.id, 'Invalid')" matTooltip="Mark as Invalid">block</mat-icon>
 
                 <!-- PDF -->
                 <mat-icon style="color: grey;" class="text-blue-700 hover:text-blue-900 cursor-pointer"
                           (click)="triggerPrintToPDF(item)" matTooltip="Print Report">picture_as_pdf</mat-icon>
 
-                <!-- Department Accept Buttons (unchanged) -->
+                <!-- Department Accept Buttons -->
                 <button *ngIf="item.requestedTo==='MDRRMO' && role==='MDRRMO'" (click)="acceptPdfRequestIncidentFromMDRRMO(item)" matTooltip="Accept Incident Report From MDRRMO" class="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transform hover:scale-110 transition">
                   <mat-icon>check_circle</mat-icon>
                 </button>

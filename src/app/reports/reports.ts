@@ -21,6 +21,8 @@ import { handleIncidentPdfRequest, IncidentOffice } from './incident-pdf-actions
 import { ReportCountComponent } from "../report-count.component/report-count.component";
 import { RequestIncidentModalComponent } from '../request-incident-modal/request-incident-modal';
 import { RequestGetModalComponent } from '../request-get-modal/request-get-modal'
+import Swal from 'sweetalert2';
+
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -537,14 +539,16 @@ export class Reports implements OnInit {
 
   openRequestIncidentModal(): void {
     this.dialog.open(RequestIncidentModalComponent, {
-      width: '500px',
+      width: '900px',      // fixes the outer dialog width
+      maxWidth: '120vw',
       data: { role: this.role }
     });
   }
 
   openRequestModal(role: string) {
   const dialogRef = this.dialog.open(RequestGetModalComponent, {
-    width: '600px',
+    width: '900px',      // fixes the outer dialog width
+    maxWidth: '95vw',
     data: { role }  // pass the current user role
   });
 
@@ -561,6 +565,28 @@ export class Reports implements OnInit {
   get totalPages(): number {
     return Math.ceil(this.firebaseData.length / this.itemsPerPage);
   }
+
+  confirmStatusChange(itemId: string, status: 'Responding' | 'Rescued' | 'Invalid'): void {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you really want to mark this report as ${status}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.updateStatus(itemId, status);
+        Swal.fire(
+          'Updated!',
+          `The report has been marked as ${status}.`,
+          'success'
+        );
+      }
+    });
+  }
+
 }
 function openIncidentPdfForAgency(item: any, any: any, agency: any, string: any, status: string, arg5: string) {
   throw new Error('Function not implemented.');

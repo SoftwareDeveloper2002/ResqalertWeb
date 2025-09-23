@@ -96,36 +96,35 @@ export class IncidentDetailsDialog {
   ) {}
 
   onSave(): void {
-    // ✅ Save approved details directly into request_data
-    const requestData = {
-      incident_id: this.data.incident_id,
-      from_role: this.data.from_role,
-      to_role: this.data.to_role,
-      status: 'Approved',
-      whoInvolved: this.data.whoInvolved,
-      peopleCount: this.data.peopleCount,
-      details: this.data.details,
-      notes: this.data.notes,
-      timestamp: Date.now()
-    };
+  // ✅ Always reuse incident_id passed from the request
+  const requestData = {
+    incident_id: this.data.incident_id,   // do NOT generate new
+    from_role: this.data.from_role,
+    to_role: this.data.to_role,
+    status: 'Approved',
+    whoInvolved: this.data.whoInvolved,
+    peopleCount: this.data.peopleCount,
+    details: this.data.details,
+    notes: this.data.notes,
+    timestamp: Date.now()
+  };
 
-    console.log('Payload sent to /request_data:', requestData);
+  console.log('Payload sent to /request_data:', requestData);
 
-    // ✅ Send to request_data collection, not requests
-    this.http.post(`${environment.backendUrl}/api/report/request_data`, requestData, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-    })
-      .subscribe({
-        next: (res) => {
-          console.log('Approved request saved successfully:', res);
-          this.dialogRef.close(res); // return saved data
-        },
-        error: (err) => {
-          console.error('Failed to save approved request:', err);
-          alert('Failed to save approved request. Please try again.');
-        }
-      });
-  }
+  this.http.post(`${environment.backendUrl}/api/report/request_data`, requestData, {
+    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+  })
+    .subscribe({
+      next: (res) => {
+        console.log('Approved request saved successfully:', res);
+        this.dialogRef.close(res); // return saved data
+      },
+      error: (err) => {
+        console.error('Failed to save approved request:', err);
+        alert('Failed to save approved request. Please try again.');
+      }
+    });
+}
 
   onCancel(): void {
     this.dialogRef.close();

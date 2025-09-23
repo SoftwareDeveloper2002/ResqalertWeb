@@ -4,27 +4,54 @@
     🚨 RESQALERT DASHBOARD - {{ role }}
   </a>
   <div class="ms-auto d-flex align-items-center gap-3">
-    <div class="dropdown">
-      <button class="btn btn-light dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
-        Settings
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded">
 
+    <!-- Settings Dropdown -->
+    <div class="dropdown">
+      <button
+        class="btn btn-light btn-sm dropdown-toggle fw-semibold px-3 shadow-sm"
+        type="button"
+        data-bs-toggle="dropdown">
+        ⚙️ Settings
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 border-0">
         <li *ngIf="isLoggedIn">
-          <a (click)="openAccountDialog()" class="nav-link text-dark fw-semibold" style="cursor: pointer;">
-            🔑Passwd&Usrname
+          <a (click)="openAccountDialog()" class="dropdown-item fw-semibold" style="cursor: pointer;">
+            🔑 Change Credentials
           </a>
         </li>
-
         <li *ngIf="isLoggedIn && canAccessFeedback()">
-          <a (click)="openFeedbackDialog()" class="nav-link text-dark fw-semibold" style="cursor: pointer;">
-             📝 Submit Feedback
+          <a (click)="openFeedbackDialog()" class="dropdown-item fw-semibold" style="cursor: pointer;">
+            📝 Submit Feedback
           </a>
         </li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="#">❓ Help</a></li>
+        <li>
+          <a class="dropdown-item fw-semibold" href="#">
+            ❓ Help & Support
+          </a>
+        </li>
       </ul>
     </div>
-    <button class="btn btn-outline-light shadow-sm" (click)="logout()">Logout</button>
+
+    <!-- Logout -->
+    <button
+      class="btn btn-outline-light btn-sm fw-semibold px-3 shadow-sm"
+      (click)="logout()">
+      ⏻ Logout
+    </button>
   </div>
 </nav>
+<!-- Audio element (always in DOM, just hidden) -->
+<audio id="alert-audio" loop>
+  <source src="alarm.mp3" type="audio/mpeg" />
+  Your browser does not support the audio element.
+</audio>
+
+<!-- Full Screen Flashing Alert -->
+<div *ngIf="showNewReportNotification" class="alert-overlay">
+  <div class="alert-message">
+    🚨 ALERT! RESPOND IMMEDIATELY!!!
+  </div>
+
+  <button class="alert-dismiss" (click)="dismissNotification()">✖</button>
+</div>
