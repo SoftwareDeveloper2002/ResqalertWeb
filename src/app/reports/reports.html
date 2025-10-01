@@ -55,6 +55,7 @@
           <tr class="text-center uppercase font-semibold">
             <th class="px-4 py-2">Incident #</th>
             <th class="px-4 py-2">Untoward Incident</th>
+            <th class="px-4 py-2">Phone Number</th>
             <th class="px-4 py-2">Status</th>
             <th class="px-4 py-2">Timestamp</th>
             <th class="px-4 py-2">Action</th>
@@ -68,6 +69,7 @@
               <div [attr.id]="'report-content-' + item.id" class="p-5 bg-white w-full rounded-lg shadow">
                 <h3 class="font-bold text-lg mb-2">Accident Report</h3>
                 <p><strong>Accident Type:</strong> {{ item.accident_type || 'N/A' }}</p>
+                <p><strong>Accident Type:</strong> {{ item.phone_number || 'N/A' }}</p>
                 <p><strong>Status:</strong> {{ item.status }}</p>
                 <p><strong>Timestamp:</strong> {{ item.timestamp | date:'medium' }}</p>
                 <p *ngIf="item.googleMapLink"><strong>Location:</strong> <a [href]="item.googleMapLink" target="_blank" class="text-blue-600 underline">{{ item.googleMapLink }}</a></p>
@@ -77,6 +79,7 @@
             <!-- Visible row -->
             <td class="px-4 py-2">{{ firebaseData.length - i }}</td>
             <td class="px-4 py-2">{{ item.accident_type || 'N/A' }}</td>
+            <td class="px-4 py-2">{{ item.phone_number || 'N/A' }}</td>
             <td class="px-4 py-2">
               <span *ngIf="item.status==='After'" class="px-2 py-1 rounded-full bg-green-500 text-white text-xs font-semibold">After</span>
               <span *ngIf="item.status==='Invalid'" class="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-semibold">Invalid</span>
