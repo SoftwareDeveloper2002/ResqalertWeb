@@ -55,7 +55,7 @@
           <tr class="text-center uppercase font-semibold">
             <th class="px-4 py-2">Incident #</th>
             <th class="px-4 py-2">Untoward Incident</th>
-            <th class="px-4 py-2">Before, after, during</th>
+            <th class="px-4 py-2">Status</th>
             <th class="px-4 py-2">Timestamp</th>
             <th class="px-4 py-2">Action</th>
           </tr>
@@ -78,9 +78,9 @@
             <td class="px-4 py-2">{{ firebaseData.length - i }}</td>
             <td class="px-4 py-2">{{ item.accident_type || 'N/A' }}</td>
             <td class="px-4 py-2">
-              <span *ngIf="item.status==='Rescued'" class="px-2 py-1 rounded-full bg-green-500 text-white text-xs font-semibold">Rescued</span>
+              <span *ngIf="item.status==='After'" class="px-2 py-1 rounded-full bg-green-500 text-white text-xs font-semibold">After</span>
               <span *ngIf="item.status==='Invalid'" class="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-semibold">Invalid</span>
-              <span *ngIf="item.status!=='Rescued' && item.status!=='Invalid'" class="px-2 py-1 rounded-full bg-gray-400 text-white text-xs font-semibold">{{ item.status }}</span>
+              <span *ngIf="item.status!=='After' && item.status!=='Invalid'" class="px-2 py-1 rounded-full bg-gray-400 text-white text-xs font-semibold">{{ item.status }}</span>
             </td>
             <td class="px-4 py-2">{{ item.timestamp | date:'medium' }}</td>
 
@@ -98,10 +98,10 @@
 
                 <!-- Status Actions with Swal Confirmation -->
                 <mat-icon style="color: grey;" class="text-orange-500 hover:text-orange-700 cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'Responding')" matTooltip="Mark as Responding">fire_truck</mat-icon>
+                          (click)="confirmStatusChange(item.id, 'During')" matTooltip="Mark as During">fire_truck</mat-icon>
 
                 <mat-icon style="color: grey;" class="cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'Rescued')" matTooltip="Mark as Rescued">volunteer_activism</mat-icon>
+                          (click)="confirmStatusChange(item.id, 'After')" matTooltip="Mark as Rescued">volunteer_activism</mat-icon>
 
                 <mat-icon style="color: grey;" class="text-red-500 hover:text-red-700 cursor-pointer"
                           (click)="confirmStatusChange(item.id, 'Invalid')" matTooltip="Mark as Invalid">block</mat-icon>

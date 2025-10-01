@@ -43,14 +43,14 @@
 </nav>
 <!-- Audio element (always in DOM, just hidden) -->
 <audio id="alert-audio" loop>
-  <source src="alarm.mp3" type="audio/mpeg" />
+  <source src="remix.mp3" type="audio/mpeg" />
   Your browser does not support the audio element.
 </audio>
 
 <!-- Full Screen Flashing Alert -->
 <div *ngIf="showNewReportNotification" class="alert-overlay">
   <div class="alert-message">
-    🚨 ALERT! RESPOND IMMEDIATELY!!!
+    🚨 EMERGENCY!!! 🚨
   </div>
 
   <button class="alert-dismiss" (click)="dismissNotification()">✖</button>

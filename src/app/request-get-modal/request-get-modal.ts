@@ -176,7 +176,7 @@ export class RequestGetModalComponent implements OnInit {
     y += 10;
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
-    doc.text("This report was system generated.", margin, y);
+    doc.text("This report wsssas system generated.", margin, y);
 
     // Save File
     const fileName = `incident-report-${item.incident_id || Date.now()}.pdf`;

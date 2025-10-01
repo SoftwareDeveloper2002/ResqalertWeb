@@ -68,7 +68,7 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
   };
 
   statusPieChartData: ChartData<'pie', number[], string | string[]> = {
-    labels: ['Rescued', 'Invalid', 'Others'],
+    labels: ['After', 'Invalid', 'Others'],
     datasets: [{
       data: [],
       backgroundColor: ['#28a745', '#dc3545', '#6c757d']
@@ -170,7 +170,7 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
         this.otherCount = res.otherCount || 0;
 
         this.statusPieChartData = {
-          labels: ['Rescued', 'Invalid', 'Others'],
+          labels: ['After', 'Invalid', 'Others'],
           datasets: [{
             data: [this.rescuedCount, this.invalidCount, this.otherCount],
             backgroundColor: ['#28a745', '#dc3545', '#6c757d']
@@ -311,8 +311,9 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     if (!container || !window.google) return; // Ensure Google Maps is loaded
 
     const map = new window.google.maps.Map(container, {
-      zoom: 12, // zoom to, the higher the number the closer the zoom
-      center: { lat: 15.032314, lng: 120.692332 }, // center of the map
+      zoom: 16, // zoom to, the higher the number the closer the zoom
+      center: { lat: 15.220356, lng: 120.658494 }, // center of the map 15.220356, 120.658494
+
       mapTypeId: 'roadmap' // as you can see sa googlemap
     });
 

@@ -76,7 +76,7 @@ export class RequestIncidentModalComponent {
       incident_id: this.item.id,
       from_role: this.role,
       to_role: target,
-      status: 'Pending',
+      status: 'Before',
       timestamp: Date.now()
     };
 

@@ -119,6 +119,32 @@ export class Reports implements OnInit {
     }
   }
 
+  private async loadImageAsBase64(file: File | string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (typeof file === 'string') {
+        // Load from URL
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // needed if from external domain
+        img.src = file;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg'));
+        };
+        img.onerror = reject;
+      } else {
+        // File object
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
   async generateBarangayCrimeCounts(): Promise<void> {
     for (const report of this.firebaseData) {
       const { latitude, longitude } = report;
@@ -193,11 +219,19 @@ export class Reports implements OnInit {
 
   openIncidentDetailsDialog(item: any): void {
     const dialogRef = this.dialog.open(IncidentDetailsDialog, {
-      width: '500px',
+      width: '80%',
       data: {
+        incident_id: item.id,
+        from_role: this.role,
+        to_role: item.requestedTo || '',
+        status: item.status || 'Pending',
         whoInvolved: item.whoInvolved || '',
         peopleCount: item.peopleCount || 0,
-        notes: item.notes || ''
+        notes: item.notes || '',
+        details: item.details || '',
+        placeName: item.place || '',
+        type: item.accident_type || '',
+        images: item.images || []
       }
     });
 
@@ -206,21 +240,26 @@ export class Reports implements OnInit {
         item.whoInvolved = result.whoInvolved;
         item.peopleCount = result.peopleCount;
         item.notes = result.notes;
+        item.details = result.details;
 
-        const url = `${environment.backendUrl}/api/report/reports/${item.id}`;
-        this.http.patch(url, {
+        // PATCH to backend for saving updates
+        this.http.patch(`${environment.backendUrl}/api/report/reports/${item.id}`, {
           whoInvolved: result.whoInvolved,
           peopleCount: result.peopleCount,
-          notes: result.notes
+          notes: result.notes,
+          details: result.details
         }).subscribe({
-          next: () => console.log('Details saved'),
-          error: (err) => console.error('Error saving details', err)
+          next: () => console.log('Incident details updated'),
+          error: (err) => console.error('Error updating incident', err)
         });
+
+        // Export PDF including uploaded images
+        this.printToPDF(result, result.images || []);
       }
     });
   }
 
-  updateStatus(itemId: string, status: 'Responding' | 'Rescued' | 'Invalid'): void {
+  updateStatus(itemId: string, status: 'During' | 'After' | 'Invalid'): void {
     const url = `${environment.backendUrl}/api/report/reports/${itemId}/status`;
     this.http.patch(url, { status }).subscribe({
       next: () => {
@@ -234,11 +273,11 @@ export class Reports implements OnInit {
   }
 
   markAsResponding(itemId: string): void {
-    this.updateStatus(itemId, 'Responding');
+    this.updateStatus(itemId, 'During');
   }
 
   markAsRescued(itemId: string): void {
-    this.updateStatus(itemId, 'Rescued');
+    this.updateStatus(itemId, 'After');
   }
 
   markAsInvalid(itemId: string): void {
@@ -396,7 +435,7 @@ export class Reports implements OnInit {
     });
   }
 
-  triggerPrintToPDF(item: any): void {
+  async triggerPrintToPDF(item: any): Promise<void> {
     const dialogRef = this.dialog.open(IncidentDetailsDialog, {
       width: '500px',
       data: {
@@ -407,20 +446,33 @@ export class Reports implements OnInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(async result => {
       if (result) {
-        // Update item with modal input
         item.details = result.details;
         item.whoInvolved = result.whoInvolved;
         item.peopleCount = result.peopleCount;
         item.notes = result.notes;
 
-        this.printToPDF(item); // Proceed to generate PDF
+        // Convert images to base64
+        const imagesBase64 = [];
+        if (item.images?.length) {
+          for (const img of item.images) {
+            try {
+              const base64 = await this.loadImageAsBase64(img);
+              imagesBase64.push(base64);
+            } catch (e) {
+              console.error('Failed to load image for PDF', e);
+            }
+          }
+        }
+
+        this.printToPDF(item, imagesBase64);
       }
     });
   }
 
-  printToPDF(item: any): void {
+
+  printToPDF(item: any, images: string[] = []): void {
     if (!item) {
       alert("No item data found for PDF export.");
       return;
@@ -432,7 +484,7 @@ export class Reports implements OnInit {
     let y = margin;
 
     const safeText = (value: any): string =>
-      value !== undefined && value !== null ? String(value) : 'N/A';
+      value !== undefined && value !== null && value !== '' ? String(value) : 'N/A';
 
     const section = (label: string, value: any, indent = 50) => {
       doc.setFont("helvetica", "bold");
@@ -469,18 +521,10 @@ export class Reports implements OnInit {
         : "N/A";
 
     let department = "";
-
-    if (this.role === "PNP") {
-      department = "Philippine National Police (PNP)";
-    } else if (this.role === "BFP") {
-      department = "Bureau of Fire Protection (BFP)";
-    } else if (this.role === "MDRRMO") {
-      department = "Municipal Disaster Risk Reduction and Management Office (MDRRMO)";
-    } else {
-      department = "Unknown Department";
-    }
-
-    doc.setFontSize(11);
+    if (this.role === "PNP") department = "Philippine National Police (PNP)";
+    else if (this.role === "BFP") department = "Bureau of Fire Protection (BFP)";
+    else if (this.role === "MDRRMO") department = "Municipal Disaster Risk Reduction and Management Office (MDRRMO)";
+    else department = "Unknown Department";
 
     section("Date/Time", timestamp);
     section("Issuing Department", department);
@@ -497,8 +541,8 @@ export class Reports implements OnInit {
     doc.text("People Involved", margin, y);
     y += 7;
 
-    section("Who's Involved", item.whoInvolved);
-    section("No. of People", item.peopleCount);
+    section("Who's Involved", safeText(item.whoInvolved || 'N/A'));
+    section("No. of People", item.peopleCount ?? 'N/A');
 
     drawDivider();
 
@@ -526,13 +570,44 @@ export class Reports implements OnInit {
     doc.text(splitDetails, margin, y);
     y += splitDetails.length * 6;
 
-    // Footer (Optional)
+    drawDivider();
+
+    // Add Images (if any)
+    if (images?.length) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Attached Images", margin, y);
+      y += 7;
+
+      const imgWidth = 50;
+      const imgHeight = 50;
+      const gap = 10;
+      let x = margin;
+
+      images.forEach(img => {
+        const imgType = img.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+        if (y + imgHeight > 280) {
+          doc.addPage();
+          y = margin;
+          x = margin;
+        }
+        doc.addImage(img, imgType, x, y, imgWidth, imgHeight);
+
+        x += imgWidth + gap;
+        if (x + imgWidth > 190) {
+          x = margin;
+          y += imgHeight + gap;
+        }
+      });
+
+      y += imgHeight + gap;
+    }
+
+    // Footer
     y += 10;
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
     doc.text("This report was system generated.", margin, y);
 
-    // Save File
     const fileName = `incident-report-${item.id || Date.now()}.pdf`;
     doc.save(fileName);
   }
@@ -566,7 +641,7 @@ export class Reports implements OnInit {
     return Math.ceil(this.firebaseData.length / this.itemsPerPage);
   }
 
-  confirmStatusChange(itemId: string, status: 'Responding' | 'Rescued' | 'Invalid'): void {
+  confirmStatusChange(itemId: string, status: 'During' | 'After' | 'Invalid'): void {
     Swal.fire({
       title: 'Are you sure?',
       text: `Do you really want to mark this report as ${status}?`,
