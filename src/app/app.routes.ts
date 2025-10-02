@@ -4,6 +4,7 @@ import { Reports } from './reports/reports';
 import { Feedback } from './feedback/feedback';
 import { AdminPanel } from './admin-panel/admin-panel';
 import { RoleGuard } from './guards/role-guard';
+import { MobileApp } from './mobile-app/mobile-app';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'admin-panel', pathMatch: 'full' },
@@ -15,6 +16,12 @@ export const routes: Routes = [
   {
     path: 'feedback',
     component: Feedback,
+    canActivate: [RoleGuard],
+    data: { expectedRole: 'SA' }
+  },
+  {
+    path: 'app',
+    component: MobileApp,
     canActivate: [RoleGuard],
     data: { expectedRole: 'SA' }
   },

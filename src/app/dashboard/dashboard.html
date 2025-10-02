@@ -8,15 +8,22 @@
   <aside class="w-64 bg-white shadow-lg p-6 flex flex-col">
     <h6 class="text-xl font-bold mb-6 text-blue-600 flex items-center gap-2">📂 Navigation</h6>
     <nav class="flex flex-col gap-3">
-      <a routerLink="/dashboard" routerLinkActive="bg-blue-100 text-blue-600" class="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 font-semibold flex items-center gap-2">
-        🏠 Dashboard
+      <ul class="nav flex-column gap-2">
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" routerLink="/dashboard" routerLinkActive="active">🏠 Dashboard</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
+      </li>
+      <li class="nav-item">
+      <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">
+        📱 Mobile App
       </a>
-      <a routerLink="/reports" routerLinkActive="bg-blue-100 text-blue-600" class="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 font-semibold flex items-center gap-2">
-        📊 Reports
-      </a>
-      <a *ngIf="role === 'SA'" routerLink="/feedback" routerLinkActive="bg-blue-100 text-blue-600" class="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 font-semibold flex items-center gap-2">
-        📝 Feedback
-      </a>
+      </li>
+    </ul>
     </nav>
   </aside>
 
