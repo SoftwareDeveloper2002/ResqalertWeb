@@ -9,21 +9,21 @@
     <h6 class="text-xl font-bold mb-6 text-blue-600 flex items-center gap-2">📂 Navigation</h6>
     <nav class="flex flex-col gap-3">
       <ul class="nav flex-column gap-2">
-      <li class="nav-item">
-        <a class="nav-link text-dark fw-semibold" routerLink="/dashboard" routerLinkActive="active">🏠 Dashboard</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
-      </li>
-      <li class="nav-item">
-      <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">
-        📱 Mobile App
-      </a>
-      </li>
-    </ul>
+        <li class="nav-item">
+          <a class="nav-link text-dark fw-semibold" routerLink="/dashboard" routerLinkActive="active">🏠 Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
+        </li>
+        <li class="nav-item">
+        <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">
+          📱 Mobile App
+        </a>
+        </li>
+      </ul>
     </nav>
   </aside>
 
