@@ -95,7 +95,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // 📡 Call Flask backend to send SMS
   async sendSmsNotification(reportId: string): Promise<void> {
     try {
-      const response = await fetch('http://localhost:7000/api/sms/send-sms', {
+      const response = await fetch('https://resqalertwebbackend-1.onrender.com/api/sms/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ report_id: reportId })
