@@ -1,8 +1,8 @@
 export const environment = {
   production: false,
-  backendUrl: 'https://resqalertwebbackend.onrender.com',
+  backendUrl: 'https://resqalertwebbackend-1.onrender.com',
   // backendUrl: 'http://127.0.0.1:7000',
-  // backendUrl https://resqalertwebbackend.onrender.com
+  // backendUrl https://resqalertwebbackend-1.onrender.com
 
 
   databaseURL: 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app',
