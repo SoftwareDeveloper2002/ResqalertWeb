@@ -22,6 +22,7 @@ import { ReportCountComponent } from "../report-count.component/report-count.com
 import { RequestIncidentModalComponent } from '../request-incident-modal/request-incident-modal';
 import { RequestGetModalComponent } from '../request-get-modal/request-get-modal'
 import Swal from 'sweetalert2';
+import { VideoDialogComponent } from './video-dialog.component';
 
 @Component({
   selector: 'app-reports',
@@ -659,6 +660,25 @@ export class Reports implements OnInit {
           'success'
         );
       }
+    });
+  }
+  isImage(url: string): boolean {
+  if (!url) return false;
+  const lowered = url.toLowerCase();
+  return lowered.includes('accident_photos') || /\.(jpg|jpeg|png|gif|webp)$/i.test(lowered);
+}
+
+isVideo(url: string): boolean {
+  if (!url) return false;
+  const lowered = url.toLowerCase();
+  return lowered.includes('accident_videos') || /\.(mp4|mov|avi|mkv|webm)$/i.test(lowered);
+}
+
+
+  openVideoDialog(videoUrl: string): void {
+    this.dialog.open(VideoDialogComponent, {
+      width: '800px',
+      data: { videoUrl }
     });
   }
 

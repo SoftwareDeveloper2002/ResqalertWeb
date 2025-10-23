@@ -16,7 +16,7 @@
           <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
+          <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
         </li>
         <li class="nav-item">
         <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">

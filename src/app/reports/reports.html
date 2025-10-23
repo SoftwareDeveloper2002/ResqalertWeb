@@ -16,7 +16,7 @@
           <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
+          <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
         </li>
         <li class="nav-item">
         <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">
@@ -97,11 +97,39 @@
             <!-- Action Icons -->
             <td class="px-4 py-2">
               <div class="flex flex-wrap justify-center gap-2">
-
                 <ng-container *ngIf="item.media_url; else noMedia">
-                  <mat-icon style="color: grey;" class="text-purple-500 hover:text-purple-700 cursor-pointer"
-                            (click)="openImageDialog(item.media_url)" matTooltip="View Image">image</mat-icon>
+                  <ng-container *ngIf="isImage(item.media_url); else videoBlock">
+                    <mat-icon
+                      class="text-gray-900 hover:text-purple-700 cursor-pointer"
+                      (click)="openImageDialog(item.media_url)"
+                      matTooltip="View Image">
+                      image
+                    </mat-icon>
+                  </ng-container>
+
+                  <ng-template #videoBlock>
+                    <mat-icon
+                      class="text-gray-900 hover:text-red-700 cursor-pointer"
+                      (click)="openVideoDialog(item.media_url)"
+                      matTooltip="View Video">
+                      play_circle
+                    </mat-icon>
+                  </ng-template>
                 </ng-container>
+
+
+                <ng-template #noMedia>
+                  <mat-icon class="text-gray-400 cursor-not-allowed" matTooltip="No Media Available">
+                    image_not_supported
+                  </mat-icon>
+                </ng-template>
+
+                <ng-template #noMedia>
+                  <mat-icon style="color: grey;" class="text-gray-900 cursor-not-allowed" matTooltip="No Media Available">
+                    image_not_supported
+                  </mat-icon>
+                </ng-template>
+                    <!-- 🖼️ Image preview -->
                 <ng-template #noMedia>
                   <mat-icon style="color: grey;" class="text-gray-900 cursor-not-allowed" matTooltip="No Media Available">image_not_supported</mat-icon>
                 </ng-template>

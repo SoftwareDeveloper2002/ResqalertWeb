@@ -4,7 +4,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FeedbackDialog } from '../../feedback-dialog/feedback-dialog';
 import { ChangeAccountDialog } from '../../change-account-dialog/change-account-dialog';
 import { ref, onChildAdded, off } from 'firebase/database';
-import { db } from '../../firebase'; // ✅ use the initialized db
+import { db } from '../../firebase';
 
 @Component({
   selector: 'app-navbar',
@@ -19,37 +19,45 @@ export class NavbarComponent implements OnInit, OnDestroy {
   @Output() logoutEvent = new EventEmitter<void>();
 
   private dialog = inject(MatDialog);
-  private reportsRef = ref(db, 'reports'); // ✅ Firebase reports reference
+  private reportsRef = ref(db, 'reports');
   private listener: any;
 
-  // 👇 State for notifications
   showNewReportNotification: boolean = false;
   newReportMessage: string = '';
 
   ngOnInit(): void {
     let initialLoad = true;
 
-    // ✅ unlock audio on first user click (due to browser autoplay restrictions)
+    // 🔊 Unlock audio playback on first click
     document.addEventListener("click", () => {
       const audio = document.getElementById("alert-audio") as HTMLAudioElement;
       if (audio) {
-        audio.play().then(() => audio.pause()); // preload/unlock
+        audio.play().then(() => audio.pause());
       }
     }, { once: true });
 
-    // ✅ Listen for new reports
+    // 👂 Listen for new Firebase reports
     this.listener = onChildAdded(this.reportsRef, (snapshot) => {
       if (snapshot.exists()) {
-        if (initialLoad) {
-          return; // skip existing reports
+        if (initialLoad) return; // Skip existing data
+
+        const reportId = snapshot.key;
+        const report = snapshot.val();
+
+        if (!reportId) {
+          console.warn("⚠️ Report ID is null — skipping SMS trigger.");
+          return;
         }
 
-        const report = snapshot.val();
         this.newReportMessage = `🚨 New report added: ${report?.title || 'Untitled Report'}`;
-        this.triggerAlert(); // ✅ play sound + show overlay
+        this.triggerAlert();
+
+        // 🚀 Trigger Flask SMS notification
+        this.sendSmsNotification(reportId);
       }
     });
 
+    // Wait 1s before enabling new-report detection
     setTimeout(() => {
       initialLoad = false;
     }, 1000);
@@ -61,36 +69,62 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  // 🔔 Play alert and show popup
   triggerAlert() {
     this.showNewReportNotification = true;
 
     const audio = document.getElementById("alert-audio") as HTMLAudioElement;
     if (audio) {
       audio.play().catch(err => {
-        console.warn("Autoplay blocked, waiting for user interaction:", err);
+        console.warn("Autoplay blocked — waiting for user action:", err);
       });
     }
   }
 
+  // ❌ Dismiss notification and stop audio
   dismissNotification() {
     this.showNewReportNotification = false;
 
     const audio = document.getElementById("alert-audio") as HTMLAudioElement;
     if (audio) {
       audio.pause();
-      audio.currentTime = 0; // rewind
+      audio.currentTime = 0;
     }
   }
 
+  // 📡 Call Flask backend to send SMS
+  async sendSmsNotification(reportId: string): Promise<void> {
+    try {
+      const response = await fetch('http://localhost:7000/api/sms/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_id: reportId })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ SMS notification triggered successfully:', result);
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Failed to trigger SMS:', errorText);
+      }
+    } catch (err) {
+      console.error('🚫 Error calling Flask SMS API:', err);
+    }
+  }
+
+  // 🔓 Logout handler
   logout(): void {
     localStorage.clear();
     this.logoutEvent.emit();
   }
 
+  // 🧭 Check access for feedback
   canAccessFeedback(): boolean {
     return ['PNP', 'BFP', 'MDRRMO'].includes(this.role);
   }
 
+  // 📝 Open feedback dialog
   openFeedbackDialog(): void {
     if (!this.canAccessFeedback()) {
       alert('❌ You are not allowed to access the feedback form.');
@@ -115,15 +149,18 @@ export class NavbarComponent implements OnInit, OnDestroy {
         fetch('https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json', {
           method: 'POST',
           body: JSON.stringify(payload)
-        }).then(() => {
+        })
+        .then(() => {
           alert(`✅ Feedback submitted with Ticket ${ticket}`);
-        }).catch(() => {
+        })
+        .catch(() => {
           alert('❌ Failed to submit feedback');
         });
       }
     });
   }
 
+  // 👤 Open account dialog
   openAccountDialog(): void {
     const dialogRef = this.dialog.open(ChangeAccountDialog, {
       width: '400px',
