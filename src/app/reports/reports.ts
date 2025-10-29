@@ -23,6 +23,7 @@ import { RequestIncidentModalComponent } from '../request-incident-modal/request
 import { RequestGetModalComponent } from '../request-get-modal/request-get-modal'
 import Swal from 'sweetalert2';
 import { VideoDialogComponent } from './video-dialog.component';
+import { printToPDF } from './pdf-utils';
 
 @Component({
   selector: 'app-reports',
@@ -105,7 +106,6 @@ export class Reports implements OnInit {
       await this.generateBarangayCrimeCounts();
       this.updatePagedReports();
 
-      // Barangay stats calculation
       const counts: Record<string, number> = {};
       for (const report of this.firebaseData) {
         const barangay = report.barangay || 'Unknown';
@@ -123,9 +123,8 @@ export class Reports implements OnInit {
   private async loadImageAsBase64(file: File | string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (typeof file === 'string') {
-        // Load from URL
         const img = new Image();
-        img.crossOrigin = 'anonymous'; // needed if from external domain
+        img.crossOrigin = 'anonymous';
         img.src = file;
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -137,7 +136,6 @@ export class Reports implements OnInit {
         };
         img.onerror = reject;
       } else {
-        // File object
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = reject;
@@ -165,10 +163,8 @@ export class Reports implements OnInit {
       }
 
       this.processedBarangays.add(latlngKey);
-      await new Promise(res => setTimeout(res, 150)); // polite delay for Nominatim
+      await new Promise(res => setTimeout(res, 150));
     }
-
-    // Rebuild stats after all are processed
     const counts: Record<string, number> = {};
     for (const report of this.firebaseData) {
       const barangay = report.place || 'Unknown';
@@ -242,8 +238,6 @@ export class Reports implements OnInit {
         item.peopleCount = result.peopleCount;
         item.notes = result.notes;
         item.details = result.details;
-
-        // PATCH to backend for saving updates
         this.http.patch(`${environment.backendUrl}/api/report/reports/${item.id}`, {
           whoInvolved: result.whoInvolved,
           peopleCount: result.peopleCount,
@@ -253,8 +247,6 @@ export class Reports implements OnInit {
           next: () => console.log('Incident details updated'),
           error: (err) => console.error('Error updating incident', err)
         });
-
-        // Export PDF including uploaded images
         this.printToPDF(result, result.images || []);
       }
     });
@@ -314,7 +306,6 @@ export class Reports implements OnInit {
     });
   }
 
-  // For triggering PDFs
   triggerPdfIncidentToBFP(item: any): void {
     handleIncidentPdfRequest(this.openIncidentPdfDialogReq.bind(this), item, "Bureau of Fire Protection (BFP)");
   }
@@ -346,8 +337,6 @@ export class Reports implements OnInit {
       console.error("Invalid item or title for incident request");
       return;
     }
-
-    // Map IncidentOffice to target role
     const roleMap: Record<IncidentOffice, string> = {
       "Bureau of Fire Protection (BFP)": "BFP",
       "Municipal Disaster Risk Reduction and Management Office (MDRRMO)": "MDRRMO",
@@ -380,9 +369,7 @@ export class Reports implements OnInit {
     });
   }
 
-  // Example helper method
   private generateAndOpenPDF(pdfData: { title: string; content: string; generatedAt: string }) {
-    // Convert JSON to blob (placeholder for actual PDF creation)
     const blob = new Blob([JSON.stringify(pdfData, null, 2)], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
@@ -453,8 +440,6 @@ export class Reports implements OnInit {
         item.whoInvolved = result.whoInvolved;
         item.peopleCount = result.peopleCount;
         item.notes = result.notes;
-
-        // Convert images to base64
         const imagesBase64 = [];
         if (item.images?.length) {
           for (const img of item.images) {
@@ -467,13 +452,12 @@ export class Reports implements OnInit {
           }
         }
 
-        this.printToPDF(item, imagesBase64);
+        printToPDF(item, imagesBase64, this.role);
       }
     });
   }
 
-
-  printToPDF(item: any, images: string[] = []): void {
+  printToPDF(item: any, images: string[] = [], role: string = 'Unknown'): void {
     if (!item) {
       alert("No item data found for PDF export.");
       return;
@@ -484,8 +468,10 @@ export class Reports implements OnInit {
     const lineSpacing = 8;
     let y = margin;
 
-    const safeText = (value: any): string =>
-      value !== undefined && value !== null && value !== '' ? String(value) : 'N/A';
+    const safeText = (value: any, fallback = "N/A"): string =>
+      value !== undefined && value !== null && value !== "" && value !== "N/A"
+        ? String(value)
+        : fallback;
 
     const section = (label: string, value: any, indent = 50) => {
       doc.setFont("helvetica", "bold");
@@ -501,7 +487,7 @@ export class Reports implements OnInit {
       y += 6;
     };
 
-    // Header
+    // 🔹 HEADER
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("Incident / Accident Report", margin, y);
@@ -514,66 +500,90 @@ export class Reports implements OnInit {
 
     drawDivider();
 
-    // Timestamp & Department
+    // 🔹 TIMESTAMP + DEPARTMENT
     const timestamp = item.timestamp
       ? new Date(item.timestamp).toLocaleString()
       : item.createdAt
-        ? new Date(item.createdAt).toLocaleString()
-        : "N/A";
+      ? new Date(item.createdAt).toLocaleString()
+      : "N/A";
 
     let department = "";
-    if (this.role === "PNP") department = "Philippine National Police (PNP)";
-    else if (this.role === "BFP") department = "Bureau of Fire Protection (BFP)";
-    else if (this.role === "MDRRMO") department = "Municipal Disaster Risk Reduction and Management Office (MDRRMO)";
+    if (role === "PNP") department = "Philippine National Police (PNP)";
+    else if (role === "BFP") department = "Bureau of Fire Protection (BFP)";
+    else if (role === "MDRRMO")
+      department = "Municipal Disaster Risk Reduction and Management Office (MDRRMO)";
     else department = "Unknown Department";
 
     section("Date/Time", timestamp);
     section("Issuing Department", department);
     section("Place Name", safeText(item.place));
-    section("Latitude", item.latitude);
-    section("Longitude", item.longitude);
-    section("Status", item.status);
-    section("Accident Type", item.accident_type);
+    section("Latitude", safeText(item.latitude));
+    section("Longitude", safeText(item.longitude));
+    section("Status", safeText(item.status));
+    section(
+      "Accident Type",
+      Array.isArray(item.accident_type)
+        ? item.accident_type.join(", ")
+        : safeText(item.accident_type)
+    );
 
     drawDivider();
 
-    // People Involved
+    // 🔹 PEOPLE INVOLVED
     doc.setFont("helvetica", "bold");
     doc.text("People Involved", margin, y);
     y += 7;
 
-    section("Who's Involved", safeText(item.whoInvolved || 'N/A'));
-    section("No. of People", item.peopleCount ?? 'N/A');
+    const whoInvolved = safeText(
+      item.whoInvolved || item.reportedBy || item.phone_number || item.contact
+    );
+
+    let peopleCount: any;
+    if (
+      item.peopleCount !== undefined &&
+      item.peopleCount !== null &&
+      item.peopleCount !== "" &&
+      item.peopleCount !== "N/A"
+    ) {
+      peopleCount = item.peopleCount;
+    } else if (item.numberOfPeople !== undefined && item.numberOfPeople !== null) {
+      peopleCount = item.numberOfPeople;
+    } else {
+      peopleCount = 0;
+    }
+
+    section("Who's Involved", whoInvolved);
+    section("No. of People", peopleCount);
 
     drawDivider();
 
-    // Additional Notes
+    // 🔹 ADDITIONAL NOTES
     doc.setFont("helvetica", "bold");
     doc.text("Additional Notes", margin, y);
     y += 7;
 
     doc.setFont("helvetica", "normal");
-    const notesText = safeText(item.notes || "No notes provided.");
+    const notesText = safeText(item.notes, "No notes provided.");
     const splitNotes = doc.splitTextToSize(notesText, 170);
     doc.text(splitNotes, margin, y);
     y += splitNotes.length * 6;
 
     drawDivider();
 
-    // Details Section
+    // 🔹 INCIDENT DETAILS
     doc.setFont("helvetica", "bold");
     doc.text("Incident Details", margin, y);
     y += 7;
 
     doc.setFont("helvetica", "normal");
-    const detailsText = safeText(item.details || "No additional details provided.");
+    const detailsText = safeText(item.details, "No additional details provided.");
     const splitDetails = doc.splitTextToSize(detailsText, 170);
     doc.text(splitDetails, margin, y);
     y += splitDetails.length * 6;
 
     drawDivider();
 
-    // Add Images (if any)
+    // 🔹 ATTACHED IMAGES
     if (images?.length) {
       doc.setFont("helvetica", "bold");
       doc.text("Attached Images", margin, y);
@@ -584,26 +594,23 @@ export class Reports implements OnInit {
       const gap = 10;
       let x = margin;
 
-      images.forEach(img => {
-        const imgType = img.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      for (const img of images) {
+        const imgType = img.startsWith("data:image/png") ? "PNG" : "JPEG";
         if (y + imgHeight > 280) {
           doc.addPage();
           y = margin;
           x = margin;
         }
         doc.addImage(img, imgType, x, y, imgWidth, imgHeight);
-
         x += imgWidth + gap;
         if (x + imgWidth > 190) {
           x = margin;
           y += imgHeight + gap;
         }
-      });
+      }
 
       y += imgHeight + gap;
     }
-
-    // Footer
     y += 10;
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
@@ -615,7 +622,7 @@ export class Reports implements OnInit {
 
   openRequestIncidentModal(): void {
     this.dialog.open(RequestIncidentModalComponent, {
-      width: '900px',      // fixes the outer dialog width
+      width: '900px',
       maxWidth: '120vw',
       data: { role: this.role }
     });
@@ -686,5 +693,3 @@ isVideo(url: string): boolean {
 function openIncidentPdfForAgency(item: any, any: any, agency: any, string: any, status: string, arg5: string) {
   throw new Error('Function not implemented.');
 }
-
-

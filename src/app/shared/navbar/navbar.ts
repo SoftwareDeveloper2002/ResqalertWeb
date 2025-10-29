@@ -28,7 +28,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     let initialLoad = true;
 
-    // 🔊 Unlock audio playback on first click
     document.addEventListener("click", () => {
       const audio = document.getElementById("alert-audio") as HTMLAudioElement;
       if (audio) {
@@ -36,28 +35,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
       }
     }, { once: true });
 
-    // 👂 Listen for new Firebase reports
     this.listener = onChildAdded(this.reportsRef, (snapshot) => {
       if (snapshot.exists()) {
-        if (initialLoad) return; // Skip existing data
+        if (initialLoad) return;
 
         const reportId = snapshot.key;
         const report = snapshot.val();
 
         if (!reportId) {
-          console.warn("⚠️ Report ID is null — skipping SMS trigger.");
+          console.warn("Report ID is null — skipping SMS trigger.");
           return;
         }
 
-        this.newReportMessage = `🚨 New report added: ${report?.title || 'Untitled Report'}`;
+        this.newReportMessage = `New report added: ${report?.title || 'Untitled Report'}`;
         this.triggerAlert();
 
-        // 🚀 Trigger Flask SMS notification
         this.sendSmsNotification(reportId);
       }
     });
 
-    // Wait 1s before enabling new-report detection
     setTimeout(() => {
       initialLoad = false;
     }, 1000);
@@ -69,7 +65,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 🔔 Play alert and show popup
   triggerAlert() {
     this.showNewReportNotification = true;
 
@@ -81,7 +76,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ❌ Dismiss notification and stop audio
   dismissNotification() {
     this.showNewReportNotification = false;
 
@@ -92,7 +86,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  // 📡 Call Flask backend to send SMS
   async sendSmsNotification(reportId: string): Promise<void> {
     try {
       const response = await fetch('https://resqalertwebbackend-1.onrender.com/api/sms/send-sms', {
@@ -103,28 +96,23 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ SMS notification triggered successfully:', result);
+
       } else {
         const errorText = await response.text();
-        console.error('❌ Failed to trigger SMS:', errorText);
       }
     } catch (err) {
-      console.error('🚫 Error calling Flask SMS API:', err);
     }
   }
 
-  // 🔓 Logout handler
   logout(): void {
     localStorage.clear();
     this.logoutEvent.emit();
   }
 
-  // 🧭 Check access for feedback
   canAccessFeedback(): boolean {
     return ['PNP', 'BFP', 'MDRRMO'].includes(this.role);
   }
 
-  // 📝 Open feedback dialog
   openFeedbackDialog(): void {
     if (!this.canAccessFeedback()) {
       alert('❌ You are not allowed to access the feedback form.');
@@ -160,7 +148,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
-  // 👤 Open account dialog
   openAccountDialog(): void {
     const dialogRef = this.dialog.open(ChangeAccountDialog, {
       width: '400px',
@@ -169,8 +156,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result?.username || result?.password) {
-        console.log('🔄 Updating account with:', result);
-        alert('✅ Account details updated successfully.');
+        alert('Account details updated successfully.');
       }
     });
   }

@@ -17,7 +17,7 @@ export class AdminPanel {
   username = '';
   password = '';
   bgImage = '/assets/edt.jpg';
-  selectedRole = ''; // e.g., 'PNP', 'BFP', 'MDRRMO'
+  selectedRole = ''; // e.g., 'PNP', 'BFP', 'MDRRMO', 'SA'
   isLoading = false;
 
   constructor(private router: Router, private http: HttpClient) {}
