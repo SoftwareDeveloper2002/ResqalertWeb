@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  backendUrl: 'http://127.0.0.1:7000',
+  backendUrl: 'https://resqalertwebbackend-1.onrender.com',
   // backendUrl: 'http://127.0.0.1:7000',
   // backendUrl https://resqalertwebbackend-1.onrender.com
 
