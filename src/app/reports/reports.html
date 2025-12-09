@@ -75,7 +75,7 @@
                 <p><strong>Accident Type:</strong> {{ item.accident_type || 'N/A' }}</p>
                 <p><strong>Accident Type:</strong> {{ item.phone_number || 'N/A' }}</p>
                 <p><strong>Status:</strong> {{ item.status }}</p>
-                <p><strong>Timestamp:</strong> {{ item.timestamp | date:'medium' }}</p>
+                <p><strong>Timestamp:</strong> {{ getFormattedTime(item.timestamp) }}</p>
                 <p *ngIf="item.googleMapLink"><strong>Location:</strong> <a [href]="item.googleMapLink" target="_blank" class="text-blue-600 underline">{{ item.googleMapLink }}</a></p>
               </div>
             </td>
@@ -89,31 +89,51 @@
               <span *ngIf="item.status==='Invalid'" class="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-semibold">Invalid</span>
               <span *ngIf="item.status!=='After' && item.status!=='Invalid'" class="px-2 py-1 rounded-full bg-gray-400 text-white text-xs font-semibold">{{ item.status }}</span>
             </td>
-            <td class="px-4 py-2">{{ item.timestamp | date:'medium' }}</td>
+            <td class="px-4 py-2">{{ getFormattedTime(item.timestamp) }}</td>
 
             <!-- Action Icons -->
             <td class="px-4 py-2">
               <div class="flex flex-wrap justify-center gap-2">
+
+                <!-- Location button for each role -->
+                <mat-icon
+                  *ngIf="currentRole === 'pnp'"
+                  class="cursor-pointer"
+                  (click)="openDirections(responders.pnp.lat, responders.pnp.lng, item.latitude, item.longitude)"
+                  matTooltip="Show Location">
+                  location_on
+                </mat-icon>
+
+                <mat-icon
+                  *ngIf="currentRole === 'bfp'"
+                  class="cursor-pointer"
+                  (click)="openDirections(responders.bfp.lat, responders.bfp.lng, item.latitude, item.longitude)"
+                  matTooltip="Show Location">
+                  location_on
+                </mat-icon>
+
+                <mat-icon
+                  *ngIf="currentRole === 'mdrrmo'"
+                  class="cursor-pointer"
+                  (click)="openDirections(responders.mdrrmo.lat, responders.mdrrmo.lng, item.latitude, item.longitude)"
+                  matTooltip="Show Location">
+                  location_on
+                </mat-icon>
+
+                <!-- Media Icons -->
                 <ng-container *ngIf="item.media_url; else noMedia">
                   <ng-container *ngIf="isImage(item.media_url); else videoBlock">
-                    <mat-icon
-                      class="text-gray-900 hover:text-purple-700 cursor-pointer"
-                      (click)="openImageDialog(item.media_url)"
-                      matTooltip="View Image">
+                    <mat-icon class="cursor-pointer" (click)="openImageDialog(item.media_url)" matTooltip="View Image">
                       image
                     </mat-icon>
                   </ng-container>
 
                   <ng-template #videoBlock>
-                    <mat-icon
-                      class="text-gray-900 hover:text-red-700 cursor-pointer"
-                      (click)="openVideoDialog(item.media_url)"
-                      matTooltip="View Video">
+                    <mat-icon class="cursor-pointer" (click)="openVideoDialog(item.media_url)" matTooltip="View Video">
                       play_circle
                     </mat-icon>
                   </ng-template>
                 </ng-container>
-
 
                 <ng-template #noMedia>
                   <mat-icon class="text-gray-400 cursor-not-allowed" matTooltip="No Media Available">
@@ -121,53 +141,68 @@
                   </mat-icon>
                 </ng-template>
 
-                <ng-template #noMedia>
-                  <mat-icon style="color: grey;" class="text-gray-900 cursor-not-allowed" matTooltip="No Media Available">
-                    image_not_supported
-                  </mat-icon>
-                </ng-template>
-                    <!-- 🖼️ Image preview -->
-                <ng-template #noMedia>
-                  <mat-icon style="color: grey;" class="text-gray-900 cursor-not-allowed" matTooltip="No Media Available">image_not_supported</mat-icon>
-                </ng-template>
+                <!-- Status Icons -->
+                <mat-icon class="cursor-pointer"
+                          (click)="confirmStatusChange(item.id, 'During')"
+                          matTooltip="Mark as During">
+                  fire_truck
+                </mat-icon>
 
-                <!-- Status Actions with Swal Confirmation -->
-                <mat-icon style="color: grey;" class="text-orange-500 hover:text-orange-700 cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'During')" matTooltip="Mark as During">fire_truck</mat-icon>
+                <mat-icon class="cursor-pointer"
+                          (click)="confirmStatusChange(item.id, 'After')"
+                          matTooltip="Mark as Rescued">
+                  volunteer_activism
+                </mat-icon>
 
-                <mat-icon style="color: grey;" class="cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'After')" matTooltip="Mark as Rescued">volunteer_activism</mat-icon>
-
-                <mat-icon style="color: grey;" class="text-red-500 hover:text-red-700 cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'Invalid')" matTooltip="Mark as Invalid">block</mat-icon>
+                <mat-icon class="cursor-pointer"
+                          (click)="confirmStatusChange(item.id, 'Invalid')"
+                          matTooltip="Mark as Invalid">
+                  block
+                </mat-icon>
 
                 <!-- PDF -->
-                <mat-icon style="color: grey;" class="text-blue-700 hover:text-blue-900 cursor-pointer"
-                          (click)="triggerPrintToPDF(item)" matTooltip="Print Report">picture_as_pdf</mat-icon>
+                <mat-icon class="cursor-pointer"
+                          (click)="triggerPrintToPDF(item)"
+                          matTooltip="Print Report">
+                  picture_as_pdf
+                </mat-icon>
 
-                <!-- Department Accept Buttons -->
-                <button *ngIf="item.requestedTo==='MDRRMO' && role==='MDRRMO'" (click)="acceptPdfRequestIncidentFromMDRRMO(item)" matTooltip="Accept Incident Report From MDRRMO" class="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transform hover:scale-110 transition">
-                  <mat-icon>check_circle</mat-icon>
-                </button>
-                <button *ngIf="item.requestedTo==='BFP' && role==='BFP'" (click)="acceptPdfRequestIncidentFromBFP(item)" matTooltip="Accept Incident Report From BFP" class="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transform hover:scale-110 transition">
-                  <mat-icon>check_circle</mat-icon>
-                </button>
-                <button *ngIf="item.requestedTo==='PNP' && role==='PNP'" (click)="acceptPdfRequestIncidentFromPNP(item)" matTooltip="Accept Incident Report From PNP" class="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-md transform hover:scale-110 transition">
-                  <mat-icon>check_circle</mat-icon>
-                </button>
+                <!-- Accept Buttons -->
+                <mat-icon *ngIf="item.requestedTo==='MDRRMO' && role==='MDRRMO'"
+                          class="cursor-pointer"
+                          (click)="acceptPdfRequestIncidentFromMDRRMO(item)"
+                          matTooltip="Accept Incident">
+                  check_circle
+                </mat-icon>
+
+                <mat-icon *ngIf="item.requestedTo==='BFP' && role==='BFP'"
+                          class="cursor-pointer"
+                          (click)="acceptPdfRequestIncidentFromBFP(item)"
+                          matTooltip="Accept Incident">
+                  check_circle
+                </mat-icon>
+
+                <mat-icon *ngIf="item.requestedTo==='PNP' && role==='PNP'"
+                          class="cursor-pointer"
+                          (click)="acceptPdfRequestIncidentFromPNP(item)"
+                          matTooltip="Accept Incident">
+                  check_circle
+                </mat-icon>
+
+                <!-- Block Number -->
+                <div (click)="blockNumber(item)" matTooltip="Block Number" class="cursor-pointer flex items-center gap-1">
+                  <mat-icon>phone_disabled</mat-icon>
+                  <span class="text-xs">{{ item.blocked }}</span>
+                </div>
 
               </div>
             </td>
-
           </tr>
-
           <tr *ngIf="firebaseData.length === 0">
             <td colspan="5" class="text-center text-gray-400 py-4">No data available.</td>
           </tr>
-
         </tbody>
       </table>
     </div>
-
   </main>
 </div>

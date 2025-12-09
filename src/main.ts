@@ -9,7 +9,7 @@ import { provideHttpClient } from '@angular/common/http';
 bootstrapApplication(App, {
   ...appConfig,
   providers: [
-    provideHttpClient(), // ✅ Already included
+    provideHttpClient(),
     ...appConfig.providers || [],
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideDatabase(() => getDatabase())

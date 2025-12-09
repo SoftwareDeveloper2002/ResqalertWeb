@@ -25,6 +25,7 @@ export class Feedback implements OnInit {
   private dialog = inject(MatDialog);
 
   ngOnInit(): void {
+
     if (this.role !== 'SA') {
       this.router.navigate(['/admin-panel']);
       return;

@@ -32,6 +32,25 @@
 
     <!-- Overview Header -->
     <h5 class="text-2xl font-bold text-blue-600">🏠 Overview</h5>
+    <!-- Export Controls (Month Selector + Export Button) -->
+<div class="flex justify-end mb-4 items-center gap-3">
+
+  <span class="font-semibold">Export Month:</span>
+
+  <select [(ngModel)]="selectedExportMonth"
+          class="px-3 py-1 rounded-lg border border-gray-300">
+    <option *ngFor="let m of months" [value]="m.value">
+      {{ m.label }}
+    </option>
+  </select>
+
+  <button (click)="exportPDF()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+    Export PDF
+  </button>
+
+</div>
+
 
     <!-- Monthly Reports Card -->
     <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6">
@@ -43,27 +62,6 @@
               class="w-full"
               style="height: 250px;">
       </canvas>
-    </div>
-
-    <!-- Charts Row -->
-    <div class="grid md:grid-cols-2 gap-6">
-
-      <!-- Reports by Department -->
-      <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6 flex flex-col items-center">
-        <h6 class="text-center font-bold mb-4">📊 Reports by Department</h6>
-        <div class="w-48 h-48">
-          <canvas baseChart [data]="pieChartData" [type]="pieChartType" class="w-full h-full"></canvas>
-        </div>
-      </div>
-
-      <!-- Reports by Month -->
-      <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6 flex flex-col items-center">
-        <h6 class="text-center font-bold mb-4">📊 Reports by Month</h6>
-        <div class="w-48 h-48">
-          <canvas baseChart [data]="pieChartData" [type]="pieChartType" class="w-full h-full"></canvas>
-        </div>
-      </div>
-
     </div>
 
     <!-- Heatmap & Crime Summary -->

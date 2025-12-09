@@ -1,0 +1,88 @@
+<!-- Top Navbar Component -->
+<app-navbar [role]="role" [isLoggedIn]="true" (logoutEvent)="logout()"></app-navbar>
+
+<!-- Main Layout -->
+<div class="flex min-h-screen bg-gray-100">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-lg p-6 flex flex-col">
+    <h6 class="text-xl font-bold mb-6 text-blue-600 flex items-center gap-2">📂 Navigation</h6>
+    <nav class="flex flex-col gap-3">
+      <ul class="nav flex-column gap-2">
+        <li class="nav-item">
+          <a class="nav-link text-dark fw-semibold" routerLink="/admin-dashboard" routerLinkActive="active">🏠 Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">📱 Mobile App</a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="flex-1 p-6 space-y-6">
+
+    <!-- Export PDF Button -->
+    <div class="flex justify-end items-center gap-4 mb-4">
+
+    <label class="font-medium text-gray-700">Select Month:</label>
+
+    <input
+      type="month"
+      [(ngModel)]="selectedMonth"
+      class="border border-gray-300 px-3 py-2 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+    />
+
+    <button
+      (click)="exportPDF()"
+      class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
+    >
+      📄 Export PDF
+    </button>
+
+  </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+      <div class="bg-white p-4 shadow rounded text-center">
+        <h6 class="font-semibold text-gray-500">Total Reports</h6>
+        <p class="text-2xl font-bold text-blue-600">{{ totalReports }}</p>
+      </div>
+      <div class="bg-white p-4 shadow rounded text-center">
+        <h6 class="font-semibold text-gray-500">PNP Reports</h6>
+        <p class="text-2xl font-bold text-green-600">{{ totalPNP }}</p>
+      </div>
+      <div class="bg-white p-4 shadow rounded text-center">
+        <h6 class="font-semibold text-gray-500">BFP Reports</h6>
+        <p class="text-2xl font-bold text-yellow-600">{{ totalBFP }}</p>
+      </div>
+      <div class="bg-white p-4 shadow rounded text-center">
+        <h6 class="font-semibold text-gray-500">MDRRMO Reports</h6>
+        <p class="text-2xl font-bold text-red-600">{{ totalMDRRMO }}</p>
+      </div>
+      <div class="bg-white p-4 shadow rounded text-center">
+        <h6 class="font-semibold text-gray-500">Blocked Numbers</h6>
+        <p class="text-2xl font-bold text-gray-800">{{ totalBlocked }}</p>
+      </div>
+    </div>
+
+    <!-- Monthly Reports Line Chart -->
+    <div class="bg-white p-4 shadow rounded">
+      <h6 class="font-semibold text-gray-500 mb-2">Monthly Reports</h6>
+      <canvas baseChart
+        [data]="monthlyLineChartData"
+        [type]="'line'"
+        [options]="monthlyLineChartOptions"
+        class="w-full"
+        style="height: 300px;">
+      </canvas>
+    </div>
+
+  </main>
+
+</div>

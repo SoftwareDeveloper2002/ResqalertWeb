@@ -58,6 +58,12 @@ export class Reports implements OnInit {
   barangayStats: { barangay: string; count: number }[] = [];
   processedBarangays = new Set<string>();
   barangayCrimeCounts: any = {};
+  currentRole: string = '';
+  responders = {
+    pnp: { lat: 15.2156985, lng: 120.6670404 },
+    bfp: { lat: 15.2140789, lng: 120.6623999 },
+    mdrrmo: { lat: 15.223555, lng: 120.6889152 }
+  };
 
   constructor(
     private readonly router: Router,
@@ -67,6 +73,7 @@ export class Reports implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.role = localStorage.getItem('role') || 'Unknown';
+    this.currentRole = this.role.toLowerCase();
     const isSA = this.role === 'SA';
     const apiUrl = isSA
       ? `${environment.backendUrl}/api/report/reports`
@@ -404,6 +411,7 @@ export class Reports implements OnInit {
   });
 }
 
+
   private getDepartmentCode(label: string): string {
     if (label.includes("BFP")) return "BFP";
     if (label.includes("MDRRMO")) return "MDRRMO";
@@ -687,6 +695,73 @@ isVideo(url: string): boolean {
       width: '800px',
       data: { videoUrl }
     });
+  }
+
+  blockNumber(item: any): void {
+    if (!item.phone_number) {
+      Swal.fire("Error", "No phone number found to block.", "error");
+      return;
+    }
+
+    Swal.fire({
+      title: "Block this number?",
+      text: `Phone Number: ${item.phone_number}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Block",
+      cancelButtonText: "Cancel"
+    }).then(result => {
+      if (result.isConfirmed) {
+        const payload = {
+          phone_number: item.phone_number,
+          blockedBy: this.role,
+          timestamp: new Date().toISOString(),
+          reportId: item.id
+        };
+
+        // Firebase Realtime Database URL
+        const url = `https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/blocked_num.json`;
+
+        fetch(url, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        })
+        .then(() => {
+          Swal.fire("Blocked!", "The phone number has been blocked.", "success");
+          // Optional: mark it in UI
+          item.blocked = true;
+        })
+        .catch(err => {
+          console.error("Error blocking number in Firebase:", err);
+          Swal.fire("Error", "Failed to block the number.", "error");
+        });
+      }
+    });
+  }
+  openDirections(originLat: number, originLng: number, destLat: number, destLng: number): void {
+    const url =
+      `https://www.google.com/maps/dir/?api=1` +
+      `&origin=${originLat},${originLng}` +
+      `&destination=${destLat},${destLng}` +
+      `&travelmode=driving`;
+
+    window.open(url, "_blank");
+  }
+
+  getFormattedTime(timestamp: string | number): string {
+    if (!timestamp) return 'N/A';
+    const ts = Number(timestamp) < 1e12 ? Number(timestamp) * 1000 : Number(timestamp);
+    const date = new Date(ts);
+
+    const day = ('0' + date.getDate()).slice(-2);
+    const month = date.toLocaleString('default', { month: 'short' });
+    const year = date.getFullYear();
+
+    const hours = ('0' + (date.getHours() % 12 || 12)).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+
+    return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
   }
 
 }

@@ -16,65 +16,88 @@ import Swal from 'sweetalert2';
 export class AdminPanel {
   username = '';
   password = '';
-  bgImage = '/assets/edt.jpg';
-  selectedRole = ''; // e.g., 'PNP', 'BFP', 'MDRRMO', 'SA'
   isLoading = false;
 
   constructor(private router: Router, private http: HttpClient) {}
 
   onLogin(): void {
-    if (!this.username || !this.password || !this.selectedRole) {
+    if (!this.username || !this.password) {
       Swal.fire({
         icon: 'warning',
         title: 'Missing Fields',
-        text: '⚠️ All fields are required.',
+        text: '⚠️ Username and password are required.',
       });
       return;
     }
 
-    const loginPayload = {
-      username: this.username.trim(),
-      password: this.password,
-      role: this.selectedRole
-    };
-
-    const url = `${environment.backendUrl}/api/admin/login`;
-
-    // Show loading indicator
     this.isLoading = true;
     Swal.fire({
-      title: 'Logging in...',
+      title: 'Checking account...',
       allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
+      didOpen: () => Swal.showLoading()
     });
 
-    this.http.post<{ success: boolean; message: string }>(url, loginPayload).subscribe({
-      next: (response) => {
+    const url = `${environment.databaseURL}/admins.json`;
+
+    this.http.get<any>(url).subscribe({
+      next: (data) => {
+        let foundRole: string | null = null;
+        for (const role in data) {
+          const admins = data[role];
+
+          for (const adminKey in admins) {
+            const admin = admins[adminKey];
+
+            if (
+              admin.username === this.username.trim() &&
+              admin.password === this.password
+            ) {
+              foundRole = role;
+              break;
+            }
+          }
+
+          if (foundRole) break;
+        }
+
         this.isLoading = false;
         Swal.close();
 
-        if (response.success) {
-          localStorage.setItem('role', this.selectedRole);
-          this.router.navigate(['/dashboard']);
+        if (foundRole) {
+          localStorage.setItem('role', foundRole);
+          localStorage.setItem('username', this.username);
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Login Successful',
+            text: `Role detected: ${foundRole}`,
+            timer: 1500,
+            showConfirmButton: false
+          });
+
+          if (foundRole === 'SA') {
+            this.router.navigate(['/admin-dashboard']);
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
+
         } else {
           Swal.fire({
             icon: 'error',
-            title: 'Login Failed',
-            text: '❌ ' + response.message,
+            title: 'Invalid Credentials',
+            text: '❌ Username or password incorrect.',
           });
         }
       },
       error: (err) => {
         this.isLoading = false;
         Swal.close();
-        console.error('Login failed:', err);
+        console.error('Error:', err);
+
         Swal.fire({
           icon: 'error',
-          title: 'Login Error',
-          text: '❌ Login failed. Please try again later.',
+          title: 'Database Error',
+          text: '❌ Unable to read admin database.',
         });
       }
     });

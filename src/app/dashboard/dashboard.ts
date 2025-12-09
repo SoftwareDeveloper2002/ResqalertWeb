@@ -10,6 +10,8 @@ import { FormsModule } from '@angular/forms';
 import { FeedbackDialog } from '../feedback-dialog/feedback-dialog';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NavbarComponent } from "../shared/navbar/navbar";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 // sa taas yung mga imports
 declare global { // to declare global variables
   interface Window {
@@ -56,11 +58,30 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
   rescuedCount = 0;
   invalidCount = 0;
   otherCount = 0;
-
+  selectedMonth: string = 'All';
+  selectedExportMonth: string = 'All';
+  months = [
+    { label: 'All Months', value: 'All' },
+    { label: 'January', value: 'Jan' },
+    { label: 'February', value: 'Feb' },
+    { label: 'March', value: 'Mar' },
+    { label: 'April', value: 'Apr' },
+    { label: 'May', value: 'May' },
+    { label: 'June', value: 'Jun' },
+    { label: 'July', value: 'Jul' },
+    { label: 'August', value: 'Aug' },
+    { label: 'September', value: 'Sep' },
+    { label: 'October', value: 'Oct' },
+    { label: 'November', value: 'Nov' },
+    { label: 'December', value: 'Dec' }
+  ];
   role: string = '';
   isLoggedIn: boolean = false;
   recentLocationAddresses: { address: string, lat: number, lng: number, crime: string }[] = [];
-
+  roleFilteredPieChartData: ChartData<'pie', number[], string | string[]> = {
+  labels: [],
+  datasets: [{ data: [], backgroundColor: [] }]
+};
   pieChartType: ChartType = 'pie';
   pieChartData: ChartData<'pie', number[], string | string[]> = {
     labels: [],
@@ -117,6 +138,10 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
   ngOnInit(): void {
     this.role = localStorage.getItem('role') ?? 'Unknown';
     this.isLoggedIn = !!this.role;
+    if (this.role === 'SA') {
+      this.router.navigate(['/admin-dashboard']);
+      return;
+    }
     this.loadSummaryFromAPI();
     this.fetchRawDataAndProcessRecentLocations();
   }
@@ -210,13 +235,20 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
 
   private generateFlagDistribution(): void {
     const flagCounts: Record<string, number> = {};
+    const userRole = (this.role ?? '').toLowerCase(); // pnp, bfp, mdrrmo, sa
+
     for (const item of this.firebaseData) {
       const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
+
       for (let flag of flags) {
         if (typeof flag === 'string') {
-          flag = flag.trim();
-          if (flag.toUpperCase() === 'MDRMM') flag = 'MDRMMO';
+          flag = flag.trim().toUpperCase();
+          if (flag === 'MDRMM') flag = 'MDRRMO'; // normalize typo
         }
+
+        // ROLE FILTER: show only current role
+        if (userRole !== 'sa' && flag.toLowerCase() !== userRole) continue;
+
         flagCounts[flag] = (flagCounts[flag] || 0) + 1;
       }
     }
@@ -225,7 +257,7 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     const values = labels.map(label => flagCounts[label]);
     const colors = ['#007bff', '#ffc107', '#dc3545', '#28a745', '#6c757d'];
 
-    this.pieChartData = {
+    this.roleFilteredPieChartData = {
       labels,
       datasets: [{
         data: values,
@@ -233,6 +265,7 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
       }]
     };
   }
+
 
   private async generateBarangayCrimeCounts(): Promise<void> {
     this.barangayCrimeCounts = {};
@@ -267,12 +300,23 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
 
   private generateMonthlyLineChart(): void {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // array of month names
+    const userRole = (this.role ?? '').toLowerCase();
     const reportCount: Record<string, number> = {}; // object to hold report counts
     const yearsWithData = new Set<number>();
 
     for (const item of this.firebaseData) {
       const ts = item.timestamp;
       if (ts) {
+        const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
+
+        // Filter by role
+        const matchesRole =
+          userRole === 'sa' ||
+          flags.some((flag: string | null | undefined) =>
+            (flag ?? '').toLowerCase() === userRole
+          );
+
+        if (!matchesRole) continue;
         try {
           const date = new Date(ts);
           const label = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
@@ -388,4 +432,98 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
   getGoogleMapsLink(lat: number, lng: number): string { // to generate Google Maps link for the coordinates
     return `https://www.google.com/maps?q=${lat},${lng}`;
   }
+
+  exportPDF(): void {
+    if (!this.firebaseData || this.firebaseData.length === 0) {
+      alert('No data available to export.');
+      return;
+    }
+
+    const monthInput = this.selectedExportMonth;
+
+    // Filter by role
+    const userRole = (this.role ?? '').toLowerCase();
+    let filteredReports = this.firebaseData.filter(item => {
+      const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
+      if (userRole === 'sa') return true;
+      return flags.some((flag: string) => flag?.toLowerCase() === userRole);
+    });
+
+    // Filter by month
+    if (monthInput !== 'All') {
+      filteredReports = filteredReports.filter(r => {
+        if (!r.timestamp) return false;
+        const date = new Date(r.timestamp);
+        const monthShort = date.toLocaleString('en-US', { month: 'short' });
+        return monthShort === monthInput;
+      });
+    }
+
+    if (filteredReports.length === 0) {
+      alert(`No reports found for: ${monthInput}`);
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 51, 102);
+    doc.text(`ResqAlert Dashboard Data (${monthInput})`, pageWidth / 2, 40, { align: 'center' });
+
+    autoTable(doc, {
+      head: [['ID', 'Crime Type', 'Status', 'Timestamp', 'Location']],
+      body: filteredReports.map(r => [
+        r.id,
+        Array.isArray(r.flag) ? r.flag.join(', ') : r.flag || 'Unknown',
+        r.status || 'N/A',
+        r.timestamp ? new Date(r.timestamp).toLocaleString() : 'N/A',
+        r.latitude && r.longitude ? `${r.latitude}, ${r.longitude}` : 'N/A'
+      ]),
+      startY: 70,
+      theme: 'grid'
+    });
+
+    const now = new Date();
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${now.toLocaleString()}`,
+      pageWidth - 40,
+      doc.internal.pageSize.getHeight() - 20,
+      { align: 'right' }
+    );
+
+    doc.save(`resqalert_data_${monthInput}.pdf`);
+  }
+
+
+  updateSelectedMonth() {
+    if (this.selectedMonth === 'All') {
+      this.generateMonthlyLineChart(); // reset to normal
+      return;
+    }
+
+    const filteredLabels: string[] = [];
+    const filteredValues: number[] = [];
+
+    this.lineChartData.labels?.forEach((label, index) => {
+      if (label.startsWith(this.selectedMonth)) {
+        filteredLabels.push(label);
+        filteredValues.push(this.lineChartData.datasets[0].data[index]);
+      }
+    });
+
+    this.lineChartData = {
+      labels: filteredLabels,
+      datasets: [{
+        label: 'Reports',
+        data: filteredValues,
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13,110,253,0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    };
+  }
+
 }

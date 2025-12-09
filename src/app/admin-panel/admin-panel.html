@@ -10,24 +10,6 @@
     <!-- Form -->
     <form (ngSubmit)="onLogin()" class="space-y-4">
 
-      <!-- Role Selector -->
-      <div class="flex flex-col">
-        <label for="role" class="mb-2 text-white font-medium drop-shadow">Role</label>
-        <select
-          id="role"
-          [(ngModel)]="selectedRole"
-          name="selectedRole"
-          required
-          class="px-4 py-2 bg-white/40 border border-white/50 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-        >
-          <option value="" disabled selected>Select role</option>
-          <option value="PNP">PNP</option>
-          <option value="BFP">BFP</option>
-          <option value="MDRRMO">MDRRMO</option>
-          <option value="SA">SUPER ADMIN</option>
-        </select>
-      </div>
-
       <!-- Loading Spinner -->
       <div *ngIf="isLoading" class="flex justify-center">
         <div class="w-8 h-8 border-4 border-white/50 border-t-blue-400 rounded-full animate-spin"></div>
@@ -61,12 +43,11 @@
 
       <!-- Login Button -->
       <button
-  type="submit"
-  class="w-full h-12 bg-pink-500 hover:bg-red-600 text-white font-semibold !rounded-full shadow-md transition-all duration-300"
->
-  Login
-</button>
-
+        type="submit"
+        class="w-full h-12 bg-pink-500 hover:bg-red-600 text-white font-semibold !rounded-full shadow-md transition-all duration-300"
+      >
+        Login
+      </button>
 
     </form>
   </div>
