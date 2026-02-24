@@ -26,33 +26,29 @@
       </ul>
     </nav>
   </aside>
-
-  <!-- Content Area -->
+<!--
   <main class="flex-1 p-6 space-y-6">
 
-    <!-- Overview Header -->
     <h5 class="text-2xl font-bold text-blue-600">🏠 Overview</h5>
-    <!-- Export Controls (Month Selector + Export Button) -->
-<div class="flex justify-end mb-4 items-center gap-3">
+    <div class="flex justify-end mb-4 items-center gap-3">
 
-  <span class="font-semibold">Export Month:</span>
+      <span class="font-semibold">Export Month:</span>
 
-  <select [(ngModel)]="selectedExportMonth"
-          class="px-3 py-1 rounded-lg border border-gray-300">
-    <option *ngFor="let m of months" [value]="m.value">
-      {{ m.label }}
-    </option>
-  </select>
+      <select [(ngModel)]="selectedExportMonth"
+              class="px-3 py-1 rounded-lg border border-gray-300">
+        <option *ngFor="let m of months" [value]="m.value">
+          {{ m.label }}
+        </option>
+      </select>
 
-  <button (click)="exportPDF()"
-          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-    Export PDF
-  </button>
+      <button (click)="exportPDF()"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        Export PDF
+      </button>
 
-</div>
+    </div>
 
 
-    <!-- Monthly Reports Card -->
     <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6">
       <h6 class="text-center font-bold mb-4">📈 Monthly Reports</h6>
       <canvas baseChart
@@ -64,14 +60,11 @@
       </canvas>
     </div>
 
-    <!-- Heatmap & Crime Summary -->
     <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg p-6 space-y-4">
 
       <h6 class="text-center font-bold mb-4">🗺️ Highest Crime Rate (Heat Map)</h6>
-      <!-- Google Map Heatmap -->
       <div id="crimeHeatMap" class="w-full h-120 rounded-xl overflow-hidden"></div>
 
-      <!-- Crime Type Filter -->
       <div class="flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-2">
           <label class="font-semibold">Filter by Crime Type:</label>
@@ -85,7 +78,6 @@
         </div>
       </div>
 
-      <!-- Report Count per Barangay -->
       <div class="bg-white/50 backdrop-blur-sm rounded-xl shadow p-4">
         <h6 class="text-center font-bold mb-3">📍 Report Count per Barangay</h6>
         <ng-container *ngIf="barangayCounts.length > 0; else noData">
@@ -106,7 +98,6 @@
         </ng-template>
       </div>
 
-      <!-- Recent Locations -->
       <div class="overflow-auto max-h-64">
         <ul class="space-y-2 text-sm">
           <li *ngFor="let loc of filteredLocationAddresses" class="bg-white/50 backdrop-blur-sm rounded-xl p-3 shadow-sm">
@@ -128,4 +119,6 @@
     </div>
 
   </main>
+-->
+
 </div>
