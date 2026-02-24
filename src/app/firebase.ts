@@ -3,7 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
 
-const firebaseConfig = {
+const firebaseCosnfig = {
   apiKey: "AIzaSyCRWqmuYtcTyAm-HcpQWguV2gaN7sMVm1g",
   authDomain: "resqalert-22692.firebaseapp.com",
   databaseURL: "https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app",
