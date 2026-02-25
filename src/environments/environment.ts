@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  backendUrl: 'http://18.140.71.77',
+  backendUrl: '',
   // backendUrl: 'http://127.0.0.1:7000',
   // backendUrl http://18.140.71.77
 
