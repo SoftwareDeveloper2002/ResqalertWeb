@@ -85,16 +85,39 @@
             <td class="px-4 py-2">{{ item.accident_type || 'N/A' }}</td>
             <td class="px-4 py-2">{{ item.phone_number || 'N/A' }}</td>
             <td class="px-4 py-2">
-              <span [ngSwitch]="item.status" class="px-2 py-1 rounded-full text-white text-xs font-semibold">
+              <span [ngSwitch]="item.status"
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide shadow-sm">
 
-                <span *ngSwitchCase="'After'" class="bg-green-500">After</span>
-                <span *ngSwitchCase="'Invalid'" class="bg-red-500">Invalid</span>
-                <span *ngSwitchCase="'During'" class="bg-yellow-500">During</span>
-                <span *ngSwitchCase="'Pending'" class="bg-blue-500">Pending</span>
-                <span *ngSwitchCase="'Resolved'" class="bg-gray-500">Resolved</span>
+                <span *ngSwitchCase="'After'"
+                      class="bg-gradient-to-r from-green-500 to-green-600 text-white">
+                  After
+                </span>
 
-                <!-- Fallback for unknown status -->
-                <span *ngSwitchDefault class="bg-gray-400">{{ item.status || 'Unknown' }}</span>
+                <span *ngSwitchCase="'Invalid'"
+                      class="bg-gradient-to-r from-red-500 to-red-600 text-white">
+                  Invalid
+                </span>
+
+                <span *ngSwitchCase="'During'"
+                      class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+                  During
+                </span>
+
+                <span *ngSwitchCase="'Pending'"
+                      class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                  Pending
+                </span>
+
+                <span *ngSwitchCase="'Resolved'"
+                      class="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
+                  Resolved
+                </span>
+
+                <!-- Fallback -->
+                <span *ngSwitchDefault
+                      class="bg-gray-200 text-gray-700">
+                  {{ item.status || 'Unknown' }}
+                </span>
 
               </span>
             </td>
