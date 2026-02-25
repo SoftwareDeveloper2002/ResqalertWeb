@@ -85,10 +85,18 @@
             <td class="px-4 py-2">{{ item.accident_type || 'N/A' }}</td>
             <td class="px-4 py-2">{{ item.phone_number || 'N/A' }}</td>
             <td class="px-4 py-2">
-              <span *ngIf="item.status==='After'" class="px-2 py-1 rounded-full bg-green-500 text-white text-xs font-semibold">After</span>
-              <span *ngIf="item.status==='Invalid'" class="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-semibold">Invalid</span>
-              <span *ngIf="item.status==='During'" class="px-2 py-1 rounded-full bg-red-500 text-white text-xs font-semibold">During</span>
-              <span *ngIf="item.status!=='After' && item.status!=='Invalid'" class="px-2 py-1 rounded-full bg-gray-400 text-white text-xs font-semibold">{{ item.status }}</span>
+              <span [ngSwitch]="item.status" class="px-2 py-1 rounded-full text-white text-xs font-semibold">
+
+                <span *ngSwitchCase="'After'" class="bg-green-500">After</span>
+                <span *ngSwitchCase="'Invalid'" class="bg-red-500">Invalid</span>
+                <span *ngSwitchCase="'During'" class="bg-yellow-500">During</span>
+                <span *ngSwitchCase="'Pending'" class="bg-blue-500">Pending</span>
+                <span *ngSwitchCase="'Resolved'" class="bg-gray-500">Resolved</span>
+
+                <!-- Fallback for unknown status -->
+                <span *ngSwitchDefault class="bg-gray-400">{{ item.status || 'Unknown' }}</span>
+
+              </span>
             </td>
             <td class="px-4 py-2">{{ getFormattedTime(item.timestamp) }}</td>
 
