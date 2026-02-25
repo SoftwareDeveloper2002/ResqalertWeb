@@ -36,22 +36,26 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }, { once: true });
 
     this.listener = onChildAdded(this.reportsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        if (initialLoad) return;
+      if (!snapshot.exists()) return;
+      if (initialLoad) return;
 
-        const reportId = snapshot.key;
-        const report = snapshot.val();
+      const reportId = snapshot.key;
+      const report = snapshot.val();
 
-        if (!reportId) {
-          console.warn("Report ID is null — skipping SMS trigger.");
-          return;
-        }
-
-        this.newReportMessage = `New report added: ${report?.title || 'Untitled Report'}`;
-        this.triggerAlert();
-
-        this.sendSmsNotification(reportId);
+      if (!reportId || !report) {
+        console.warn("Report ID or data missing — skipping.");
+        return;
       }
+
+      // 🚨 Skip alerts and SMS for postponed or resolved reports
+      if (report.status === 'RESCUED' || report.status === 'DURING') {
+        console.log(`Report ${reportId} is ${report.status} — skipping alert and SMS.`);
+        return;
+      }
+
+      this.newReportMessage = `New report added: ${report?.title || 'Untitled Report'}`;
+      this.triggerAlert();
+      this.sendSmsNotification(reportId);
     });
 
     setTimeout(() => {
@@ -96,11 +100,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
       if (response.ok) {
         const result = await response.json();
-
+        console.log('SMS sent:', result);
       } else {
         const errorText = await response.text();
+        console.warn('SMS failed:', errorText);
       }
     } catch (err) {
+      console.error('SMS error:', err);
     }
   }
 
@@ -138,12 +144,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
           method: 'POST',
           body: JSON.stringify(payload)
         })
-        .then(() => {
-          alert(`✅ Feedback submitted with Ticket ${ticket}`);
-        })
-        .catch(() => {
-          alert('❌ Failed to submit feedback');
-        });
+          .then(() => {
+            alert(`✅ Feedback submitted with Ticket ${ticket}`);
+          })
+          .catch(() => {
+            alert('❌ Failed to submit feedback');
+          });
       }
     });
   }
