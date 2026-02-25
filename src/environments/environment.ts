@@ -1,8 +1,8 @@
 export const environment = {
   production: false,
-  backendUrl: '',
+  backendUrl: 'https://commit-asthma-teach-ian.trycloudflare.com',
   // backendUrl: 'http://127.0.0.1:7000',
-  // backendUrl http://18.140.71.77
+  // backendUrl https://commit-asthma-teach-ian.trycloudflare.com
 
 
   databaseURL: 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app',
