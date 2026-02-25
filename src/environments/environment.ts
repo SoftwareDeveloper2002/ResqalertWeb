@@ -1,7 +1,8 @@
 export const environment = {
   production: false,
-  backendUrl: 'https://commit-asthma-teach-ian.trycloudflare.com',
+  backendUrl: 'http://18.140.71.77',
   // backendUrl: 'http://127.0.0.1:7000',
+  // http://18.140.71.77
   // backendUrl https://commit-asthma-teach-ian.trycloudflare.com
 
 
