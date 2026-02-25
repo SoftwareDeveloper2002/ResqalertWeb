@@ -88,7 +88,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   async sendSmsNotification(reportId: string): Promise<void> {
     try {
-      const response = await fetch('https://commit-asthma-teach-ian.trycloudflare.com/api/sms/send-sms', {
+      const response = await fetch('https://resqalert.soltryxsolutions.com/api/sms/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ report_id: reportId })
