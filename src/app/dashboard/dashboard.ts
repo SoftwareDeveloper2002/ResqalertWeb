@@ -12,6 +12,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NavbarComponent } from "../shared/navbar/navbar";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { A11yModule } from "@angular/cdk/a11y";
 // sa taas yung mga imports
 declare global { // to declare global variables
   interface Window {
@@ -36,7 +37,8 @@ interface BarangayCrimeCount { // to define the structure of barangay crime coun
     NgChartsModule,
     MatDialogModule,
     FeedbackDialog,
-    NavbarComponent
+    NavbarComponent,
+    A11yModule
 ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
