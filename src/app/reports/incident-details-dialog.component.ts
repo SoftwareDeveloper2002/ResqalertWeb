@@ -5,11 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-
 interface IncidentForm {
   incidentId: string;
   fromRole: string;
@@ -26,14 +21,7 @@ interface IncidentForm {
 @Component({
   selector: 'app-incident-details-dialog',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
-  ],
+  imports: [CommonModule, FormsModule],
   template: `
   <div class="dialog-wrapper">
     <div class="dialog-card">
@@ -43,64 +31,70 @@ interface IncidentForm {
         <p>Review and export report</p>
       </header>
 
+      <!-- PEOPLE -->
       <section class="section">
         <h3>People Involved</h3>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Who's Involved</mat-label>
-          <input matInput [(ngModel)]="form.whoInvolved"
-                 placeholder="John Doe, Jane Smith">
-        </mat-form-field>
+        <div class="field">
+          <label>Who's Involved</label>
+          <input
+            type="text"
+            [(ngModel)]="form.whoInvolved"
+            placeholder="John Doe, Jane Smith"
+          />
+        </div>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>No. of People</mat-label>
-          <input matInput type="number" min="0"
-                 [(ngModel)]="form.peopleCount">
-        </mat-form-field>
+        <div class="field">
+          <label>No. of People</label>
+          <input
+            type="number"
+            min="0"
+            [(ngModel)]="form.peopleCount"
+          />
+        </div>
       </section>
 
+      <!-- LOCATION -->
       <section class="section">
         <h3>Location</h3>
 
         <div *ngIf="form.latitude && form.longitude" class="location-box">
-          <p><strong>Latitude:</strong> {{ form.latitude }}</p>
-          <p><strong>Longitude:</strong> {{ form.longitude }}</p>
+          <span><strong>Latitude:</strong> {{ form.latitude }}</span>
+          <span><strong>Longitude:</strong> {{ form.longitude }}</span>
+
           <a [href]="getMapLink()" target="_blank">
             View on Google Maps
           </a>
         </div>
       </section>
 
+      <!-- DETAILS -->
       <section class="section">
         <h3>Details</h3>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Details</mat-label>
-          <textarea matInput rows="4"
-                    [(ngModel)]="form.details"
-                    placeholder="Brief description...">
-          </textarea>
-        </mat-form-field>
+        <div class="field">
+          <label>Details</label>
+          <textarea
+            rows="4"
+            [(ngModel)]="form.details"
+            placeholder="Brief description..."
+          ></textarea>
+        </div>
 
-        <mat-form-field appearance="outline" class="full">
-          <mat-label>Additional Notes</mat-label>
-          <textarea matInput rows="3"
-                    [(ngModel)]="form.notes"
-                    placeholder="Any other remarks...">
-          </textarea>
-        </mat-form-field>
+        <div class="field">
+          <label>Additional Notes</label>
+          <textarea
+            rows="3"
+            [(ngModel)]="form.notes"
+            placeholder="Any other remarks..."
+          ></textarea>
+        </div>
       </section>
 
+      <!-- FOOTER -->
       <footer class="dialog-footer">
-        <button mat-stroked-button color="warn" (click)="onCancel()">
-          <mat-icon>cancel</mat-icon>
-          Cancel
-        </button>
-
-        <button mat-raised-button color="primary" (click)="onSave()">
-          <mat-icon>save</mat-icon>
-          Save & Export
-        </button>
+        <button class="btn cancel" (click)="onCancel()">Cancel</button>
+        <button class="btn save" (click)="onSave()">Save & Export</button>
       </footer>
 
     </div>
@@ -145,8 +139,30 @@ interface IncidentForm {
       color: #1f2937;
     }
 
-    .full {
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #374151;
+    }
+
+    .field input,
+    .field textarea {
       width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: #2563eb;
     }
 
     .location-box {
@@ -155,11 +171,15 @@ interface IncidentForm {
       background: #eef2ff;
       border: 1px solid #c7d2fe;
       font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .location-box a {
       color: #2563eb;
       text-decoration: underline;
+      margin-top: 6px;
     }
 
     .dialog-footer {
@@ -168,6 +188,28 @@ interface IncidentForm {
       gap: 10px;
       padding-top: 12px;
       border-top: 1px solid #e5e7eb;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn.cancel {
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .btn.save {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
     }
   `]
 })
@@ -194,7 +236,6 @@ export class IncidentDetailsDialog implements OnInit {
 
   ngOnInit(): void {
     const entry = this.data?.firebaseData;
-
     console.log('Dialog Data:', entry);
 
     if (!entry) {
