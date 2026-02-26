@@ -220,45 +220,53 @@ export class Reports implements OnInit {
       panelClass: 'custom-dialog-container'
     });
   }
-
+  
   openIncidentDetailsDialog(item: any): void {
+    if (!item) {
+      console.error('No item passed');
+      return;
+    }
+
     const dialogRef = this.dialog.open(IncidentDetailsDialog, {
       width: '80%',
       data: {
-        incident_id: item.id,
-        from_role: this.role,
-        to_role: item.requestedTo || '',
-        status: item.status || 'Pending',
-        whoInvolved: item.whoInvolved || '',
-        peopleCount: item.peopleCount || 0,
-        notes: item.notes || '',
-        details: item.details || '',
-        placeName: item.place || '',
-        type: item.accident_type || '',
-        images: item.images || []
+        firebaseData: item   // 👈 send whole item directly
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        item.whoInvolved = result.whoInvolved;
-        item.peopleCount = result.peopleCount;
-        item.notes = result.notes;
-        item.details = result.details;
         this.http.patch(`${environment.backendUrl}/api/report/reports/${item.id}`, {
           whoInvolved: result.whoInvolved,
           peopleCount: result.peopleCount,
           notes: result.notes,
           details: result.details
         }).subscribe({
-          next: () => console.log('Incident details updated'),
-          error: (err) => console.error('Error updating incident', err)
+          next: () => console.log('Incident updated'),
+          error: err => console.error(err)
         });
-        this.printToPDF(result, result.images || []);
+      }
+    });
+
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.http.patch(
+          `${environment.backendUrl}/api/report/reports/${item.id}`,
+          {
+            whoInvolved: result.whoInvolved,
+            peopleCount: result.peopleCount,
+            notes: result.notes,
+            details: result.details
+          }
+        ).subscribe({
+          next: () => console.log('Incident updated'),
+          error: err => console.error(err)
+        });
       }
     });
   }
-
+  
   updateStatus(itemId: string, status: 'During' | 'After' | 'Invalid'): void {
     const url = `${environment.backendUrl}/api/report/reports/${itemId}/status`;
     this.http.patch(url, { status }).subscribe({

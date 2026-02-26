@@ -152,6 +152,14 @@
                   location_on
                 </mat-icon>
 
+                <mat-icon
+                  *ngIf="currentRole === 'sa'"
+                  class="cursor-pointer"
+                  (click)="openDirections(responders.mdrrmo.lat, responders.mdrrmo.lng, item.latitude, item.longitude)"
+                  matTooltip="Show Location">
+                  location_on
+                </mat-icon>
+
                 <!-- Media Icons -->
                 <ng-container *ngIf="item.media_url; else noMedia">
                   <ng-container *ngIf="isImage(item.media_url); else videoBlock">
@@ -193,9 +201,10 @@
                 </mat-icon>
 
                 <!-- PDF -->
-                <mat-icon class="cursor-pointer"
-                          (click)="triggerPrintToPDF(item)"
-                          matTooltip="Print Report">
+                <mat-icon
+                  class="cursor-pointer"
+                  (click)="openIncidentDetailsDialog(item)"
+                  matTooltip="View Details">
                   picture_as_pdf
                 </mat-icon>
 
