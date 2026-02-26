@@ -1,0 +1,72 @@
+<div class="dialog-wrapper">
+  <div class="dialog-card">
+
+    <header class="dialog-header">
+      <h2>Incident Details</h2>
+      <p>Review and export report</p>
+    </header>
+
+    <section class="section">
+      <h3>People Involved</h3>
+
+      <div class="field">
+        <label>Who's Involved</label>
+        <input
+          type="text"
+          [(ngModel)]="form.whoInvolved"
+          placeholder="John Doe, Jane Smith"
+        />
+      </div>
+
+      <div class="field">
+        <label>No. of People</label>
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="form.peopleCount"
+        />
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>Location</h3>
+
+      <div *ngIf="form.latitude && form.longitude" class="location-box">
+        <span><strong>Latitude:</strong> {{ form.latitude }}</span>
+        <span><strong>Longitude:</strong> {{ form.longitude }}</span>
+
+        <a [href]="getMapLink()" target="_blank">
+          View on Google Maps
+        </a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>Details</h3>
+
+      <div class="field">
+        <label>Details</label>
+        <textarea
+          rows="4"
+          [(ngModel)]="form.details"
+          placeholder="Brief description..."
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label>Additional Notes</label>
+        <textarea
+          rows="3"
+          [(ngModel)]="form.notes"
+          placeholder="Any other remarks..."
+        ></textarea>
+      </div>
+    </section>
+
+    <footer class="dialog-footer">
+      <button class="btn cancel" (click)="onCancel()">Cancel</button>
+      <button class="btn save" (click)="onSave()">Save & Export</button>
+    </footer>
+
+  </div>
+</div>
