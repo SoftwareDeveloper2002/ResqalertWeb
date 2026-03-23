@@ -1,249 +1,235 @@
-<!-- Top Navbar Component -->
+<!-- Top Navbar -->
 <app-navbar [role]="role" [isLoggedIn]="true" (logoutEvent)="logout()"></app-navbar>
 
 <!-- Main Layout -->
-<div class="flex min-h-screen bg-gray-100">
+<div class="flex min-h-screen bg-pink-50/40">
 
   <!-- Sidebar -->
-  <aside class="w-64 bg-white shadow-lg p-6 flex flex-col">
-    <h6 class="text-xl font-bold mb-6 text-blue-600 flex items-center gap-2">📂 Navigation</h6>
-    <nav class="flex flex-col gap-3">
-      <ul class="nav flex-column gap-2">
-        <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" routerLink="/dashboard" routerLinkActive="active">🏠 Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
-        </li>
-        <li class="nav-item">
-        <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">
-          📱 Mobile App
-        </a>
-        </li>
-      </ul>
-    </nav>
-  </aside>
+  <app-sidebar [role]="role"></app-sidebar>
 
   <!-- Content Area -->
-  <main class="flex-1 p-6 space-y-6">
+  <main class="flex-1 p-6 space-y-6 overflow-auto">
 
-    <!-- Report Header & Actions -->
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-      <h5 class="text-2xl font-bold text-blue-600">📈 Report</h5>
-      <div class="flex flex-wrap gap-3">
-        <!-- Open Incident Button -->
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-bold text-slate-800 tracking-tight">Reports</h1>
+        <p class="text-slate-400 text-sm mt-0.5">Manage and respond to incident reports</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-2">
         <button mat-raised-button
                 (click)="openRequestIncidentModal()"
-                class="flex items-center gap-2 px-5 py-2 !bg-gradient-to-r !from-blue-500 !to-blue-600
-                      hover:!from-blue-600 hover:!to-blue-700 text-white !rounded-full
-                      shadow-lg transition transform hover:-translate-y-1">
-          <mat-icon>add_circle</mat-icon> Open Request Incident
+                class="flex items-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600
+                       text-white text-sm font-medium rounded-lg transition-colors duration-150
+                       shadow-md shadow-pink-200 border-0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Open Request Incident
         </button>
-        <!-- View Requests Button -->
+
         <button (click)="openRequestModal(role)"
-                class="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-green-500 to-green-600
-                      hover:from-green-600 hover:to-green-700 text-white !rounded-full
-                      shadow-lg transition transform hover:-translate-y-1">
-          <mat-icon>list_alt</mat-icon> View Requests
+                class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-pink-50
+                       text-slate-600 hover:text-pink-600 text-sm font-medium rounded-lg
+                       border border-pink-200 hover:border-pink-400
+                       transition-all duration-150 shadow-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          View Requests
         </button>
       </div>
     </div>
 
-    <!-- Data Table -->
-    <div class="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200 text-sm">
-        <thead class="bg-gray-50">
-          <tr class="text-center uppercase font-semibold">
-            <th class="px-4 py-2">Incident #</th>
-            <th class="px-4 py-2">Untoward Incident</th>
-            <th class="px-4 py-2">Phone Number</th>
-            <th class="px-4 py-2">Status</th>
-            <th class="px-4 py-2">Timestamp</th>
-            <th class="px-4 py-2">Action</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-900">
-          <tr *ngFor="let item of firebaseData; let i = index" class="text-center hover:bg-gray-200 transition">
+    <!-- Data Table Card -->
+    <div class="bg-white border border-pink-100 rounded-2xl overflow-hidden shadow-sm">
 
-            <!-- Hidden div for PDF capture -->
-            <td colspan="5" class="hidden">
-              <div [attr.id]="'report-content-' + item.id" class="p-5 bg-white w-full rounded-lg shadow">
-                <h3 class="font-bold text-lg mb-2">Accident Report</h3>
-                <p><strong>Accident Type:</strong> {{ item.accident_type || 'N/A' }}</p>
-                <p><strong>Accident Type:</strong> {{ item.phone_number || 'N/A' }}</p>
-                <p><strong>Status:</strong> {{ item.status }}</p>
-                <p><strong>Timestamp:</strong> {{ getFormattedTime(item.timestamp) }}</p>
-                <p *ngIf="item.googleMapLink"><strong>Location:</strong> <a [href]="item.googleMapLink" target="_blank" class="text-blue-600 underline">{{ item.googleMapLink }}</a></p>
-              </div>
-            </td>
+      <!-- Table Header bar -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-pink-100 bg-pink-50/50">
+        <div class="flex items-center gap-2">
+          <div class="w-1 h-5 rounded-full bg-pink-500"></div>
+          <span class="text-xs font-semibold text-slate-600 uppercase tracking-widest">Incident Records</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">{{ firebaseData.length }} total</span>
+      </div>
 
-            <!-- Visible row -->
-            <td class="px-4 py-2">{{ firebaseData.length - i }}</td>
-            <td class="px-4 py-2">{{ item.accident_type || 'N/A' }}</td>
-            <td class="px-4 py-2">{{ item.phone_number || 'N/A' }}</td>
-            <td class="px-4 py-2">
-              <span [ngSwitch]="item.status"
-                    class="inline-flex items-center justify-center min-w-[100px] px-4 py-2 rounded-lg text-xs font-semibold tracking-wide shadow-sm transition-all duration-200">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="border-b border-pink-100 bg-pink-50/30">
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">#</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Incident Type</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Phone</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Status</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Timestamp</th>
+              <th class="px-5 py-3 text-center text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-pink-50">
 
-                <span *ngSwitchCase="'After'"
-                      class="bg-green-50 text-green-700 border border-green-200">
-                  After
-                </span>
+            <!-- Hidden PDF divs -->
+            <ng-container *ngFor="let item of firebaseData; let i = index">
+              <tr class="hidden">
+                <td colspan="6">
+                  <div [attr.id]="'report-content-' + item.id" class="p-5 bg-white w-full rounded-lg shadow">
+                    <h3 class="font-bold text-lg mb-2">Accident Report</h3>
+                    <p><strong>Accident Type:</strong> {{ item.accident_type || 'N/A' }}</p>
+                    <p><strong>Phone:</strong> {{ item.phone_number || 'N/A' }}</p>
+                    <p><strong>Status:</strong> {{ item.status }}</p>
+                    <p><strong>Timestamp:</strong> {{ getFormattedTime(item.timestamp) }}</p>
+                    <p *ngIf="item.googleMapLink">
+                      <strong>Location:</strong>
+                      <a [href]="item.googleMapLink" target="_blank" class="text-pink-600 underline">{{ item.googleMapLink }}</a>
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
 
-                <span *ngSwitchCase="'Invalid'"
-                      class="bg-red-50 text-red-700 border border-red-200">
-                  Invalid
-                </span>
+            <!-- Visible rows -->
+            <tr *ngFor="let item of firebaseData; let i = index"
+                class="hover:bg-pink-50/40 transition-colors duration-100">
 
-                <span *ngSwitchCase="'During'"
-                      class="bg-yellow-50 text-yellow-700 border border-yellow-200">
-                  During
-                </span>
+              <td class="px-5 py-3.5">
+                <span class="text-xs font-mono font-medium text-slate-400">{{ firebaseData.length - i }}</span>
+              </td>
 
-                <span *ngSwitchCase="'Pending'"
-                      class="bg-blue-50 text-blue-700 border border-blue-200">
-                  Pending
-                </span>
+              <td class="px-5 py-3.5">
+                <span class="text-slate-700 font-medium text-sm">{{ item.accident_type || '—' }}</span>
+              </td>
 
-                <span *ngSwitchCase="'Resolved'"
-                      class="bg-gray-50 text-gray-700 border border-gray-200">
-                  Resolved
-                </span>
+              <td class="px-5 py-3.5">
+                <span class="text-slate-500 font-mono text-xs">{{ item.phone_number || '—' }}</span>
+              </td>
 
-                <!-- Fallback -->
-                <span *ngSwitchDefault
-                      class="bg-gray-100 text-gray-600 border border-gray-200">
-                  {{ item.status || 'Unknown' }}
-                </span>
-
-              </span>
-            </td>
-            <td class="px-4 py-2">{{ getFormattedTime(item.timestamp) }}</td>
-
-            <!-- Action Icons -->
-            <td class="px-4 py-2">
-              <div class="flex flex-wrap justify-center gap-2">
-
-                <!-- Location button for each role -->
-                <mat-icon
-                  *ngIf="currentRole === 'pnp'"
-                  class="cursor-pointer"
-                  (click)="openDirections(responders.pnp.lat, responders.pnp.lng, item.latitude, item.longitude)"
-                  matTooltip="Show Direction">
-                  location_on
-                </mat-icon>
-
-                <mat-icon
-                  *ngIf="currentRole === 'bfp'"
-                  class="cursor-pointer"
-                  (click)="openDirections(responders.bfp.lat, responders.bfp.lng, item.latitude, item.longitude)"
-                  matTooltip="Show Direction">
-                  location_on
-                </mat-icon>
-
-                <mat-icon
-                  *ngIf="currentRole === 'mdrrmo'"
-                  class="cursor-pointer"
-                  (click)="openDirections(responders.mdrrmo.lat, responders.mdrrmo.lng, item.latitude, item.longitude)"
-                  matTooltip="Show Direction">
-                  location_on
-                </mat-icon>
-
-                <mat-icon
-                  *ngIf="currentRole === 'sa'"
-                  class="cursor-pointer"
-                  (click)="openDirections(responders.mdrrmo.lat, responders.mdrrmo.lng, item.latitude, item.longitude)"
-                  matTooltip="Show Direction">
-                  location_on
-                </mat-icon>
-
-                <!-- Media Icons -->
-                <ng-container *ngIf="item.media_url; else noMedia">
-                  <ng-container *ngIf="isImage(item.media_url); else videoBlock">
-                    <mat-icon class="cursor-pointer" (click)="openImageDialog(item.media_url)" matTooltip="View Image">
-                      image
-                    </mat-icon>
-                  </ng-container>
-
-                  <ng-template #videoBlock>
-                    <mat-icon class="cursor-pointer" (click)="openVideoDialog(item.media_url)" matTooltip="View Video">
-                      play_circle
-                    </mat-icon>
-                  </ng-template>
+              <!-- Status Badge -->
+              <td class="px-5 py-3.5">
+                <ng-container [ngSwitch]="item.status">
+                  <span *ngSwitchCase="'After'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>After
+                  </span>
+                  <span *ngSwitchCase="'Invalid'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-red-50 text-red-600 border border-red-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>Invalid
+                  </span>
+                  <span *ngSwitchCase="'During'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-amber-50 text-amber-600 border border-amber-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span>During
+                  </span>
+                  <span *ngSwitchCase="'Pending'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-pink-50 text-pink-600 border border-pink-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-pink-500 flex-shrink-0"></span>Pending
+                  </span>
+                  <span *ngSwitchCase="'Resolved'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-slate-50 text-slate-500 border border-slate-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 flex-shrink-0"></span>Resolved
+                  </span>
+                  <span *ngSwitchDefault
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-slate-50 text-slate-500 border border-slate-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0"></span>
+                    {{ item.status || 'Unknown' }}
+                  </span>
                 </ng-container>
+              </td>
 
-                <ng-template #noMedia>
-                  <mat-icon class="text-gray-400 cursor-not-allowed" matTooltip="No Media Available">
-                    image_not_supported
-                  </mat-icon>
-                </ng-template>
+              <td class="px-5 py-3.5">
+                <span class="text-xs text-slate-400 font-mono">{{ getFormattedTime(item.timestamp) }}</span>
+              </td>
 
-                <!-- Status Icons -->
-                <mat-icon class="cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'During')"
-                          matTooltip="Mark as During">
-                  fire_truck
-                </mat-icon>
+              <!-- Actions -->
+              <td class="px-5 py-3.5">
+                <div class="flex items-center justify-center gap-1 flex-wrap">
 
-                <mat-icon class="cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'After')"
-                          matTooltip="Mark as Rescued">
-                  volunteer_activism
-                </mat-icon>
+                  <button *ngIf="currentRole === 'pnp'" (click)="openDirections(responders.pnp.lat, responders.pnp.lng, item.latitude, item.longitude)" matTooltip="Show Directions" class="action-btn text-slate-400 hover:text-pink-500 hover:bg-pink-50">
+                    <mat-icon class="!text-[18px] !leading-none">location_on</mat-icon>
+                  </button>
+                  <button *ngIf="currentRole === 'bfp'" (click)="openDirections(responders.bfp.lat, responders.bfp.lng, item.latitude, item.longitude)" matTooltip="Show Directions" class="action-btn text-slate-400 hover:text-pink-500 hover:bg-pink-50">
+                    <mat-icon class="!text-[18px] !leading-none">location_on</mat-icon>
+                  </button>
+                  <button *ngIf="currentRole === 'mdrrmo'" (click)="openDirections(responders.mdrrmo.lat, responders.mdrrmo.lng, item.latitude, item.longitude)" matTooltip="Show Directions" class="action-btn text-slate-400 hover:text-pink-500 hover:bg-pink-50">
+                    <mat-icon class="!text-[18px] !leading-none">location_on</mat-icon>
+                  </button>
+                  <button *ngIf="currentRole === 'sa'" (click)="openDirections(responders.mdrrmo.lat, responders.mdrrmo.lng, item.latitude, item.longitude)" matTooltip="Show Directions" class="action-btn text-slate-400 hover:text-pink-500 hover:bg-pink-50">
+                    <mat-icon class="!text-[18px] !leading-none">location_on</mat-icon>
+                  </button>
 
-                <mat-icon class="cursor-pointer"
-                          (click)="confirmStatusChange(item.id, 'Invalid')"
-                          matTooltip="Mark as Invalid">
-                  block
-                </mat-icon>
+                  <ng-container *ngIf="item.media_url; else noMedia">
+                    <ng-container *ngIf="isImage(item.media_url); else videoBlock">
+                      <button (click)="openImageDialog(item.media_url)" matTooltip="View Image" class="action-btn text-slate-400 hover:text-violet-500 hover:bg-violet-50">
+                        <mat-icon class="!text-[18px] !leading-none">image</mat-icon>
+                      </button>
+                    </ng-container>
+                    <ng-template #videoBlock>
+                      <button (click)="openVideoDialog(item.media_url)" matTooltip="View Video" class="action-btn text-slate-400 hover:text-violet-500 hover:bg-violet-50">
+                        <mat-icon class="!text-[18px] !leading-none">play_circle</mat-icon>
+                      </button>
+                    </ng-template>
+                  </ng-container>
+                  <ng-template #noMedia>
+                    <button disabled matTooltip="No Media" class="action-btn text-slate-300 cursor-not-allowed">
+                      <mat-icon class="!text-[18px] !leading-none">image_not_supported</mat-icon>
+                    </button>
+                  </ng-template>
 
-                <!-- PDF -->
-                <mat-icon
-                  class="cursor-pointer"
-                  (click)="openIncidentDetailsDialog(item)"
-                  matTooltip="View Details">
-                  picture_as_pdf
-                </mat-icon>
+                  <button (click)="confirmStatusChange(item.id, 'During')" matTooltip="Mark as During" class="action-btn text-slate-400 hover:text-amber-500 hover:bg-amber-50">
+                    <mat-icon class="!text-[18px] !leading-none">fire_truck</mat-icon>
+                  </button>
+                  <button (click)="confirmStatusChange(item.id, 'After')" matTooltip="Mark as Rescued" class="action-btn text-slate-400 hover:text-emerald-500 hover:bg-emerald-50">
+                    <mat-icon class="!text-[18px] !leading-none">volunteer_activism</mat-icon>
+                  </button>
+                  <button (click)="confirmStatusChange(item.id, 'Invalid')" matTooltip="Mark as Invalid" class="action-btn text-slate-400 hover:text-red-500 hover:bg-red-50">
+                    <mat-icon class="!text-[18px] !leading-none">block</mat-icon>
+                  </button>
+                  <button (click)="openIncidentDetailsDialog(item)" matTooltip="View Details" class="action-btn text-slate-400 hover:text-pink-500 hover:bg-pink-50">
+                    <mat-icon class="!text-[18px] !leading-none">picture_as_pdf</mat-icon>
+                  </button>
 
-                <!-- Accept Buttons -->
-                <mat-icon *ngIf="item.requestedTo==='MDRRMO' && role==='MDRRMO'"
-                          class="cursor-pointer"
-                          (click)="acceptPdfRequestIncidentFromMDRRMO(item)"
-                          matTooltip="Accept Incident">
-                  check_circle
-                </mat-icon>
+                  <button *ngIf="item.requestedTo === 'MDRRMO' && role === 'MDRRMO'" (click)="acceptPdfRequestIncidentFromMDRRMO(item)" matTooltip="Accept Incident" class="action-btn text-slate-400 hover:text-emerald-500 hover:bg-emerald-50">
+                    <mat-icon class="!text-[18px] !leading-none">check_circle</mat-icon>
+                  </button>
+                  <button *ngIf="item.requestedTo === 'BFP' && role === 'BFP'" (click)="acceptPdfRequestIncidentFromBFP(item)" matTooltip="Accept Incident" class="action-btn text-slate-400 hover:text-emerald-500 hover:bg-emerald-50">
+                    <mat-icon class="!text-[18px] !leading-none">check_circle</mat-icon>
+                  </button>
+                  <button *ngIf="item.requestedTo === 'PNP' && role === 'PNP'" (click)="acceptPdfRequestIncidentFromPNP(item)" matTooltip="Accept Incident" class="action-btn text-slate-400 hover:text-emerald-500 hover:bg-emerald-50">
+                    <mat-icon class="!text-[18px] !leading-none">check_circle</mat-icon>
+                  </button>
 
-                <mat-icon *ngIf="item.requestedTo==='BFP' && role==='BFP'"
-                          class="cursor-pointer"
-                          (click)="acceptPdfRequestIncidentFromBFP(item)"
-                          matTooltip="Accept Incident">
-                  check_circle
-                </mat-icon>
+                  <button (click)="blockNumber(item)" matTooltip="Block Number" class="action-btn text-slate-400 hover:text-red-500 hover:bg-red-50 gap-1">
+                    <mat-icon class="!text-[18px] !leading-none">phone_disabled</mat-icon>
+                    <span *ngIf="item.blocked" class="text-[10px] font-medium">{{ item.blocked }}</span>
+                  </button>
 
-                <mat-icon *ngIf="item.requestedTo==='PNP' && role==='PNP'"
-                          class="cursor-pointer"
-                          (click)="acceptPdfRequestIncidentFromPNP(item)"
-                          matTooltip="Accept Incident">
-                  check_circle
-                </mat-icon>
-
-                <!-- Block Number -->
-                <div (click)="blockNumber(item)" matTooltip="Block Number" class="cursor-pointer flex items-center gap-1">
-                  <mat-icon>phone_disabled</mat-icon>
-                  <span class="text-xs">{{ item.blocked }}</span>
                 </div>
+              </td>
+            </tr>
 
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="firebaseData.length === 0">
-            <td colspan="5" class="text-center text-gray-400 py-4">No data available.</td>
-          </tr>
-        </tbody>
-      </table>
+            <!-- Empty state -->
+            <tr *ngIf="firebaseData.length === 0">
+              <td colspan="6" class="py-16 text-center">
+                <div class="flex flex-col items-center gap-3 text-slate-300">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                  <p class="text-sm font-medium text-slate-400">No incident records found</p>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
     </div>
+
   </main>
 </div>

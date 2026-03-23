@@ -1,113 +1,203 @@
-<!-- Top Navbar as a Component -->
+<!-- Top Navbar -->
 <app-navbar [role]="role" [isLoggedIn]="true" (logoutEvent)="logout()"></app-navbar>
 
 <!-- Main Layout -->
-<div class="d-flex" style="min-height: 100vh; background-color: #f8f9fa;">
+<div class="flex min-h-screen bg-pink-50/40">
+
   <!-- Sidebar -->
-  <aside class="bg-white border-end p-4 shadow-sm" style="width: 250px;">
-    <h6 class="fw-bold mb-4 text-primary">📂 Navigation</h6>
-    <ul class="nav flex-column gap-2">
-        <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" routerLink="/dashboard" routerLinkActive="active">🏠 Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" routerLink="/reports" routerLinkActive="active">📊 Reports</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-dark fw-semibold" routerLink="/feedback" routerLinkActive="active">📝 Feedback</a>
-        </li>
-        <li class="nav-item">
-        <a class="nav-link text-dark fw-semibold" *ngIf="role === 'SA'" routerLink="/app" routerLinkActive="active">
-          📱 Mobile App
-        </a>
-        </li>
-      </ul>
-  </aside>
+  <app-sidebar [role]="role"></app-sidebar>
 
   <!-- Content Area -->
-  <main class="flex-fill p-4">
-    <h5 class="fw-bold text-primary mb-4">📝 Feedback</h5>
+  <main class="flex-1 p-6 space-y-6 overflow-auto">
 
-    <div class="card shadow-sm border-0 rounded-3">
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table align-middle table-hover">
-            <thead class="table-light">
-              <tr class="text-center text-uppercase small">
-                <th>#</th>
-                <th>Ticket</th>
-                <th>Message</th>
-                <th>Submitted At</th>
-                <th>Submitted By</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let feedback of pagedFeedbackList; let i = index" class="text-center">
-                <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
-                <td><span class="badge bg-danger">{{ feedback.ticket }}</span></td>
-                <td>
-                  <span class="text-dark fw-normal"
-                        (click)="openFullMessageDialog(feedback.message)"
-                        style="cursor: pointer; text-decoration: underline dotted;">
-                    {{ feedback.message.length > 30 ? (feedback.message | slice:0:30) + '...' : feedback.message }}
+    <!-- Page Header -->
+    <div>
+      <h1 class="text-xl font-bold text-slate-800 tracking-tight">Feedback</h1>
+      <p class="text-slate-400 text-sm mt-0.5">Review and manage submitted feedback tickets</p>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white border border-pink-100 rounded-2xl overflow-hidden shadow-sm">
+
+      <!-- Table Header bar -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-pink-100 bg-pink-50/50">
+        <div class="flex items-center gap-2">
+          <div class="w-1 h-5 rounded-full bg-pink-500"></div>
+          <span class="text-xs font-semibold text-slate-600 uppercase tracking-widest">Feedback Records</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">{{ feedbackList.length }} total</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="border-b border-pink-100 bg-pink-50/30">
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">#</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Ticket</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Message</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Submitted At</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Submitted By</th>
+              <th class="px-5 py-3 text-left text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Status</th>
+              <th class="px-5 py-3 text-center text-[10px] font-semibold text-pink-400 uppercase tracking-widest">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-pink-50">
+
+            <tr *ngFor="let feedback of pagedFeedbackList; let i = index"
+                class="hover:bg-pink-50/40 transition-colors duration-100">
+
+              <!-- # -->
+              <td class="px-5 py-3.5">
+                <span class="text-xs font-mono text-slate-400">
+                  {{ (currentPage - 1) * itemsPerPage + i + 1 }}
+                </span>
+              </td>
+
+              <!-- Ticket -->
+              <td class="px-5 py-3.5">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold
+                             bg-pink-50 text-pink-600 border border-pink-200 font-mono">
+                  {{ feedback.ticket }}
+                </span>
+              </td>
+
+              <!-- Message -->
+              <td class="px-5 py-3.5 max-w-xs">
+                <span (click)="openFullMessageDialog(feedback.message)"
+                      class="text-xs text-slate-600 cursor-pointer hover:text-slate-900 transition-colors
+                             underline decoration-dotted decoration-pink-300">
+                  {{ feedback.message.length > 40 ? (feedback.message | slice:0:40) + '…' : feedback.message }}
+                </span>
+              </td>
+
+              <!-- Submitted At -->
+              <td class="px-5 py-3.5">
+                <span class="text-xs text-slate-400 font-mono">{{ feedback.timestamp | date:'medium' }}</span>
+              </td>
+
+              <!-- Submitted By -->
+              <td class="px-5 py-3.5">
+                <span class="text-xs font-medium text-slate-600">{{ feedback.submittedBy || 'Anonymous' }}</span>
+              </td>
+
+              <!-- Status Badge -->
+              <td class="px-5 py-3.5">
+                <ng-container [ngSwitch]="feedback.status">
+                  <span *ngSwitchCase="'Resolved'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>Resolved
                   </span>
-                </td>
-                <td>{{ feedback.timestamp | date: 'medium' }}</td>
-                <td>{{ feedback.submittedBy || 'Anonymous' }}</td>
-                <td>
-                  <span class="badge"
-                        [ngClass]="{
-                          'bg-success': feedback.status === 'Resolved',
-                          'bg-warning text-dark': feedback.status === 'Queued',
-                          'bg-secondary': feedback.status === 'Unresolved'
-                        }">
+                  <span *ngSwitchCase="'Queued'"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-amber-50 text-amber-600 border border-amber-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0"></span>Queued
+                  </span>
+                  <span *ngSwitchDefault
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold
+                               bg-slate-50 text-slate-500 border border-slate-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 flex-shrink-0"></span>
                     {{ feedback.status || 'Unresolved' }}
                   </span>
-                </td>
-                <td>
-                  <button class="btn btn-sm btn-outline-success me-1"
-                          (click)="updateFeedbackStatus(feedback, 'Resolved')">
-                    ✔️ Resolved
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger me-1"
-                          (click)="updateFeedbackStatus(feedback, 'Unresolved')">
-                    ❌ Unresolved
-                  </button>
-                  <button class="btn btn-sm btn-outline-warning text-dark"
-                          (click)="updateFeedbackStatus(feedback, 'Queued')">
-                    ⏳ Queued
-                  </button>
-                </td>
-              </tr>
-              <tr *ngIf="feedbackList.length === 0">
-                <td colspan="7" class="text-center text-muted">No feedback submitted yet.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                </ng-container>
+              </td>
 
-        <!-- Pagination Controls -->
-        <nav *ngIf="totalPages > 1" class="mt-3">
-          <ul class="pagination justify-content-center mb-0">
-            <li class="page-item" [class.disabled]="currentPage === 1">
-              <button class="page-link" (click)="goToPage(currentPage - 1)">Previous</button>
-            </li>
+              <!-- Actions -->
+              <td class="px-5 py-3.5">
+                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                  <button (click)="updateFeedbackStatus(feedback, 'Resolved')"
+                          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium
+                                 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200
+                                 hover:border-emerald-300 transition-all duration-150">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Resolved
+                  </button>
 
-            <li class="page-item"
-                *ngFor="let page of [].constructor(totalPages); let i = index"
-                [class.active]="i + 1 === currentPage">
-              <button class="page-link" (click)="goToPage(i + 1)">{{ i + 1 }}</button>
-            </li>
+                  <button (click)="updateFeedbackStatus(feedback, 'Unresolved')"
+                          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium
+                                 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200
+                                 hover:border-red-300 transition-all duration-150">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Unresolved
+                  </button>
 
-            <li class="page-item" [class.disabled]="currentPage === totalPages">
-              <button class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
-            </li>
-          </ul>
-        </nav>
+                  <button (click)="updateFeedbackStatus(feedback, 'Queued')"
+                          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium
+                                 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200
+                                 hover:border-amber-300 transition-all duration-150">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Queued
+                  </button>
+                </div>
+              </td>
+
+            </tr>
+
+            <!-- Empty state -->
+            <tr *ngIf="feedbackList.length === 0">
+              <td colspan="7" class="py-16 text-center">
+                <div class="flex flex-col items-center gap-2 text-slate-300">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <p class="text-sm font-medium text-slate-400">No feedback submitted yet</p>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1"
+           class="flex items-center justify-center gap-1.5 px-5 py-4 border-t border-pink-100">
+
+        <button (click)="goToPage(currentPage - 1)"
+                [disabled]="currentPage === 1"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                       text-slate-500 hover:text-pink-600 bg-white hover:bg-pink-50
+                       border border-pink-100 hover:border-pink-300
+                       disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Prev
+        </button>
+
+        <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+          <button (click)="goToPage(i + 1)"
+                  [class.bg-pink-500]="i + 1 === currentPage"
+                  [class.text-white]="i + 1 === currentPage"
+                  [class.border-pink-500]="i + 1 === currentPage"
+                  [class.text-slate-500]="i + 1 !== currentPage"
+                  [class.border-pink-100]="i + 1 !== currentPage"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-semibold
+                         border bg-white hover:bg-pink-50 transition-all duration-150">
+            {{ i + 1 }}
+          </button>
+        </ng-container>
+
+        <button (click)="goToPage(currentPage + 1)"
+                [disabled]="currentPage === totalPages"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                       text-slate-500 hover:text-pink-600 bg-white hover:bg-pink-50
+                       border border-pink-100 hover:border-pink-300
+                       disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150">
+          Next
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
 
       </div>
     </div>
+
   </main>
 </div>

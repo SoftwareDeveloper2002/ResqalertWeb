@@ -3,14 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-
+import { SidebarComponent } from '../shared/sidebar/sidebar';
 import { NavbarComponent } from "../shared/navbar/navbar";
 import { FullMessageDialogComponent } from './full-message-dialog';
 
 @Component({
   selector: 'app-feedback',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, MatDialogModule, FullMessageDialogComponent],
+  imports: [CommonModule, RouterModule, NavbarComponent, MatDialogModule, FullMessageDialogComponent, SidebarComponent],
   templateUrl: './feedback.html'
 })
 export class Feedback implements OnInit {

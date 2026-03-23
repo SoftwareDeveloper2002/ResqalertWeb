@@ -24,6 +24,7 @@ import { RequestGetModalComponent } from '../request-get-modal/request-get-modal
 import Swal from 'sweetalert2';
 import { VideoDialogComponent } from './video-dialog.component';
 import { printToPDF } from './pdf-utils';
+import { SidebarComponent } from '../shared/sidebar/sidebar';
 
 @Component({
   selector: 'app-reports',
@@ -44,7 +45,8 @@ import { printToPDF } from './pdf-utils';
     NavbarComponent,
     IncidentDetailsDialog,
     ReportCountComponent,
-    RequestIncidentModalComponent
+    RequestIncidentModalComponent,
+    SidebarComponent,
 ],
   templateUrl: './reports.html',
   styleUrls: ['./reports.scss']
@@ -220,7 +222,7 @@ export class Reports implements OnInit {
       panelClass: 'custom-dialog-container'
     });
   }
-  
+
   openIncidentDetailsDialog(item: any): void {
     if (!item) {
       console.error('No item passed');
@@ -266,7 +268,7 @@ export class Reports implements OnInit {
       }
     });
   }
-  
+
   updateStatus(itemId: string, status: 'During' | 'After' | 'Invalid'): void {
     const url = `${environment.backendUrl}/api/report/reports/${itemId}/status`;
     this.http.patch(url, { status }).subscribe({

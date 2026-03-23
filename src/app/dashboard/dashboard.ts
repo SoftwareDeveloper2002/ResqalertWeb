@@ -13,25 +13,27 @@ import { NavbarComponent } from "../shared/navbar/navbar";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { A11yModule } from "@angular/cdk/a11y";
-// sa taas yung mga imports
-declare global { // to declare global variables
+import { SidebarComponent } from '../shared/sidebar/sidebar';
+
+declare global {
   interface Window {
-    google: any; // to access google maps
+    google: any;
   }
 }
 
-interface BarangayCrimeCount { // to define the structure of barangay crime counts
-  barangay: string; // name of the barangay
-  crimes: Record<string, number>; // crimes in the barangay with their counts
+interface BarangayCrimeCount {
+  barangay: string;
+  crimes: Record<string, number>;
 }
 
-@Component({ // to define the component
+@Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
     HttpClientModule,
     RouterLink,
+    SidebarComponent,
     FormsModule,
     RouterLinkActive,
     NgChartsModule,
@@ -39,11 +41,11 @@ interface BarangayCrimeCount { // to define the structure of barangay crime coun
     FeedbackDialog,
     NavbarComponent,
     A11yModule
-],
+  ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
-export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit and AfterViewInit interfaces
+export class Dashboard implements OnInit, AfterViewInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   private dialog = inject(MatDialog);
@@ -62,28 +64,32 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
   otherCount = 0;
   selectedMonth: string = 'All';
   selectedExportMonth: string = 'All';
+
   months = [
     { label: 'All Months', value: 'All' },
-    { label: 'January', value: 'Jan' },
-    { label: 'February', value: 'Feb' },
-    { label: 'March', value: 'Mar' },
-    { label: 'April', value: 'Apr' },
-    { label: 'May', value: 'May' },
-    { label: 'June', value: 'Jun' },
-    { label: 'July', value: 'Jul' },
-    { label: 'August', value: 'Aug' },
+    { label: 'January',   value: 'Jan' },
+    { label: 'February',  value: 'Feb' },
+    { label: 'March',     value: 'Mar' },
+    { label: 'April',     value: 'Apr' },
+    { label: 'May',       value: 'May' },
+    { label: 'June',      value: 'Jun' },
+    { label: 'July',      value: 'Jul' },
+    { label: 'August',    value: 'Aug' },
     { label: 'September', value: 'Sep' },
-    { label: 'October', value: 'Oct' },
-    { label: 'November', value: 'Nov' },
-    { label: 'December', value: 'Dec' }
+    { label: 'October',   value: 'Oct' },
+    { label: 'November',  value: 'Nov' },
+    { label: 'December',  value: 'Dec' }
   ];
+
   role: string = '';
   isLoggedIn: boolean = false;
   recentLocationAddresses: { address: string, lat: number, lng: number, crime: string }[] = [];
+
   roleFilteredPieChartData: ChartData<'pie', number[], string | string[]> = {
-  labels: [],
-  datasets: [{ data: [], backgroundColor: [] }]
-};
+    labels: [],
+    datasets: [{ data: [], backgroundColor: [] }]
+  };
+
   pieChartType: ChartType = 'pie';
   pieChartData: ChartData<'pie', number[], string | string[]> = {
     labels: [],
@@ -97,9 +103,7 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
       backgroundColor: ['#28a745', '#dc3545', '#6c757d']
     }]
   };
-// to define the pie chart data for status distribution
-// to define the line chart data for monthly reports
-// to define the line chart options
+
   lineChartType: ChartType = 'line';
   lineChartOptions: ChartOptions = {
     responsive: true,
@@ -130,13 +134,14 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
   };
 
   objectKeys = Object.keys;
-
   getCrimeTypes = (item: BarangayCrimeCount) => Object.keys(item.crimes);
 
   get barangayCounts(): BarangayCrimeCount[] {
     return Object.entries(this.barangayCrimeCounts).map(([barangay, crimes]) => ({ barangay, crimes }));
   }
-  // to get the barangay counts as an array of BarangayCrimeCount objects
+
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
+
   ngOnInit(): void {
     this.role = localStorage.getItem('role') ?? 'Unknown';
     this.isLoggedIn = !!this.role;
@@ -147,7 +152,7 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     this.loadSummaryFromAPI();
     this.fetchRawDataAndProcessRecentLocations();
   }
-  // to initialize the component and load data from API and Firebase
+
   ngAfterViewInit(): void {
     const interval = setInterval(() => {
       if (window.google && window.google.maps?.visualization) {
@@ -157,44 +162,44 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     }, 300);
   }
 
-  openFeedbackDialog(): void {
-    const dialogRef = this.dialog.open(FeedbackDialog, {
-      width: '400px',
-      data: { role: this.role }
-    });
+  // ─── Helpers ──────────────────────────────────────────────────────────────
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result?.message) {
-        const ticket = `#${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 8)}`;
-        const payload = {
-          message: result.message,
-          submittedBy: this.role,
-          timestamp: new Date().toISOString(),
-          ticket: ticket
-        };
+  /**
+   * Safely parses a Firebase timestamp value into a JS Date.
+   * Handles three formats:
+   *   1. Firebase Timestamp object  → { seconds: number, nanoseconds: number }
+   *   2. Unix epoch (milliseconds)  → number
+   *   3. ISO / date string          → string
+   * Returns null when the value cannot be parsed.
+   */
+  private parseTimestamp(ts: any): Date | null {
+    if (!ts) return null;
 
-        this.http.post(
-          'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json', // Firebase URL to submit feedback
-          payload
-        ).subscribe(
-          () => alert(`✅ Feedback submitted with Ticket ${ticket}`),
-          () => alert('❌ Failed to submit feedback')
-        );
-      }
-    });
+    let date: Date;
+
+    if (typeof ts === 'object' && ts !== null && 'seconds' in ts) {
+      // Firebase Timestamp object
+      date = new Date(ts.seconds * 1000);
+    } else if (typeof ts === 'number') {
+      // Unix epoch in milliseconds
+      date = new Date(ts);
+    } else {
+      // ISO string or other string format
+      date = new Date(ts);
+    }
+
+    return isNaN(date.getTime()) ? null : date;
   }
 
-  logout(): void {
-    this.router.navigate(['/login']); // Navigate to login page pag nag logout ka
-  }
+  // ─── Data loading ─────────────────────────────────────────────────────────
 
   private loadSummaryFromAPI(): void {
-    this.http.get<any>('/api/dashboard/summary').subscribe({ // to fetch summary data from the API
+    this.http.get<any>('/api/dashboard/summary').subscribe({
       next: (res) => {
-        this.totalReports = res.totalReports || 0;
-        this.rescuedCount = res.rescuedCount || 0;
-        this.invalidCount = res.invalidCount || 0;
-        this.otherCount = res.otherCount || 0;
+        this.totalReports  = res.totalReports  || 0;
+        this.rescuedCount  = res.rescuedCount  || 0;
+        this.invalidCount  = res.invalidCount  || 0;
+        this.otherCount    = res.otherCount    || 0;
 
         this.statusPieChartData = {
           labels: ['After', 'Invalid', 'Others'],
@@ -204,14 +209,12 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
           }]
         };
       },
-      error: (err) => {
-        console.error('Failed to load summary:', err);
-      }
+      error: (err) => console.error('Failed to load summary:', err)
     });
   }
 
   private async fetchRawDataAndProcessRecentLocations(): Promise<void> {
-    const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json'; // Firebase URL to fetch reports
+    const url = 'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/reports.json';
     try {
       const response = await firstValueFrom(this.http.get<any>(url));
       if (!response) return;
@@ -235,9 +238,11 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     }
   }
 
+  // ─── Chart builders ───────────────────────────────────────────────────────
+
   private generateFlagDistribution(): void {
     const flagCounts: Record<string, number> = {};
-    const userRole = (this.role ?? '').toLowerCase(); // pnp, bfp, mdrrmo, sa
+    const userRole = (this.role ?? '').toLowerCase();
 
     for (const item of this.firebaseData) {
       const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
@@ -245,12 +250,9 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
       for (let flag of flags) {
         if (typeof flag === 'string') {
           flag = flag.trim().toUpperCase();
-          if (flag === 'MDRMM') flag = 'MDRRMO'; // normalize typo
+          if (flag === 'MDRMM') flag = 'MDRRMO';
         }
-
-        // ROLE FILTER: show only current role
         if (userRole !== 'sa' && flag.toLowerCase() !== userRole) continue;
-
         flagCounts[flag] = (flagCounts[flag] || 0) + 1;
       }
     }
@@ -268,6 +270,48 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     };
   }
 
+  private generateMonthlyLineChart(): void {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const userRole = (this.role ?? '').toLowerCase();
+    const reportCount: Record<string, number> = {};
+    const yearsWithData = new Set<number>();
+
+    for (const item of this.firebaseData) {
+      const date = this.parseTimestamp(item.timestamp);
+      if (!date) continue;
+
+      const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
+      const matchesRole =
+        userRole === 'sa' ||
+        flags.some((flag: string | null | undefined) =>
+          (flag ?? '').toLowerCase() === userRole
+        );
+
+      if (!matchesRole) continue;
+
+      const label = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+      reportCount[label] = (reportCount[label] || 0) + 1;
+      yearsWithData.add(date.getFullYear());
+    }
+
+    const sortedYears = Array.from(yearsWithData).sort((a, b) => a - b);
+    const allLabels: string[] = [];
+    sortedYears.forEach(year => {
+      monthNames.forEach(month => allLabels.push(`${month} ${year}`));
+    });
+
+    this.lineChartData = {
+      labels: allLabels,
+      datasets: [{
+        label: 'Reports',
+        data: allLabels.map(label => reportCount[label] || 0),
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13,110,253,0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    };
+  }
 
   private async generateBarangayCrimeCounts(): Promise<void> {
     this.barangayCrimeCounts = {};
@@ -278,126 +322,75 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
       const latlngKey = `${latitude},${longitude}`;
       if (!latitude || !longitude || this.processedBarangays.has(latlngKey)) continue;
 
-      const address = await this.getAddressFromCoordinates(latitude, longitude);
+      const address  = await this.getAddressFromCoordinates(latitude, longitude);
       const barangay = this.extractBarangayFromAddress(address);
       if (!barangay) continue;
 
       this.barangayCrimeCounts[barangay] = this.barangayCrimeCounts[barangay] || {};
-      this.barangayCrimeCounts[barangay]['Reports'] = (this.barangayCrimeCounts[barangay]['Reports'] || 0) + 1;
+      this.barangayCrimeCounts[barangay]['Reports'] =
+        (this.barangayCrimeCounts[barangay]['Reports'] || 0) + 1;
 
       this.processedBarangays.add(latlngKey);
       await new Promise(res => setTimeout(res, 150));
     }
   }
 
-  extractBarangayFromAddress(address: string): string {
-    const patterns = [/Brgy\.?\s*([A-Za-z0-9\s]+)/i, /Barangay\s*([A-Za-z0-9\s]+)/i]; // common patterns to match barangay names
-    for (const pattern of patterns) { // loop through each pattern
-      const match = address.match(pattern);
-      if (match) return `Barangay ${match[1].trim()}`;
-    }
-    const parts = address.split(',');
-    return parts.length > 0 ? parts[0].trim() : 'Unknown';
-  }
-
-  private generateMonthlyLineChart(): void {
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // array of month names
-    const userRole = (this.role ?? '').toLowerCase();
-    const reportCount: Record<string, number> = {}; // object to hold report counts
-    const yearsWithData = new Set<number>();
-
-    for (const item of this.firebaseData) {
-      const ts = item.timestamp;
-      if (ts) {
-        const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
-
-        // Filter by role
-        const matchesRole =
-          userRole === 'sa' ||
-          flags.some((flag: string | null | undefined) =>
-            (flag ?? '').toLowerCase() === userRole
-          );
-
-        if (!matchesRole) continue;
-        try {
-          const date = new Date(ts);
-          const label = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-          reportCount[label] = (reportCount[label] || 0) + 1;
-          yearsWithData.add(date.getFullYear());
-        } catch (_) {}
-      }
-    }
-
-    const sortedYears = Array.from(yearsWithData).sort((a, b) => a - b);
-    const allLabels: string[] = [];
-    sortedYears.forEach(year => {
-      monthNames.forEach(month => {
-        allLabels.push(`${month} ${year}`);
-      });
-    });
-
-    const dataPoints = allLabels.map(label => reportCount[label] || 0);
-
-    this.lineChartData = {
-      labels: allLabels,
-      datasets: [{
-        label: 'Reports', // label for the line chart
-        data: dataPoints, // data points for the line chart
-        borderColor: '#0d6efd', // color of the line
-        backgroundColor: 'rgba(13,110,253,0.1)', // background color for the area under the line
-        tension: 0.4, // smoothness of the line
-        fill: true // fill the area under the line
-      }]
-    };
-  }
-
+  // ─── Map ──────────────────────────────────────────────────────────────────
 
   initHeatMap(): void {
-    const container = document.getElementById("crimeHeatMap");
-    if (!container || !window.google) return; // Ensure Google Maps is loaded
+    const container = document.getElementById('crimeHeatMap');
+    if (!container || !window.google) return;
 
     const map = new window.google.maps.Map(container, {
-      zoom: 16, // zoom to, the higher the number the closer the zoom
-      center: { lat: 15.220356, lng: 120.658494 }, // center of the map 15.220356, 120.658494
-
-      mapTypeId: 'roadmap' // as you can see sa googlemap
+      zoom: 16,
+      center: { lat: 15.220356, lng: 120.658494 },
+      mapTypeId: 'roadmap'
     });
 
     const heatmapData = this.firebaseData
-      .filter(d => d.latitude && d.longitude) // filter out entries without coordinates
+      .filter(d => d.latitude && d.longitude)
       .map(d => ({
-        location: new window.google.maps.LatLng(d.latitude, d.longitude), //  coordinates of the point
-        weight: d.crimeWeight || 1 // you can set a weight for each point, default is 1
+        location: new window.google.maps.LatLng(d.latitude, d.longitude),
+        weight: d.crimeWeight || 1
       }));
 
     const heatmap = new window.google.maps.visualization.HeatmapLayer({
       data: heatmapData,
-      radius: 15,// gaano kalaki ang circle ng heatmap
-      opacity: 0.7 // opacity ng heatmap
+      radius: 15,
+      opacity: 0.7
     });
 
-    heatmap.setMap(map); // to display the heatmap on the map
+    heatmap.setMap(map);
   }
 
-  async generateRecentLocations(): Promise<void> {
-    const sorted = [...this.firebaseData] // to create a copy of firebaseData
-      .filter(item => item.timestamp) // to filter out entries without timestamp
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // to sort by timestamp in descending order
+  // ─── Locations ────────────────────────────────────────────────────────────
 
-    const recentCoords = sorted.filter(item => item.latitude && item.longitude).slice(0, 50); // to get the most recent 50 entries with coordinates
-    this.recentLocationAddresses = [];// to store recent location addresses
-    const crimeSet = new Set<string>(); // to store unique crime types
+  async generateRecentLocations(): Promise<void> {
+    const sorted = [...this.firebaseData]
+      .filter(item => item.timestamp)
+      .sort((a, b) => {
+        const da = this.parseTimestamp(a.timestamp)?.getTime() ?? 0;
+        const db = this.parseTimestamp(b.timestamp)?.getTime() ?? 0;
+        return db - da;
+      });
+
+    const recentCoords = sorted
+      .filter(item => item.latitude && item.longitude)
+      .slice(0, 50);
+
+    this.recentLocationAddresses = [];
+    const crimeSet = new Set<string>();
 
     for (const item of recentCoords) {
-      const address = await this.getAddressFromCoordinates(item.latitude, item.longitude); // to get address from coordinates
-      const crimeType = item.flag?.[0] || 'Unknown'; // to get the crime type from the flag, default to 'Unknown' if not available
+      const address   = await this.getAddressFromCoordinates(item.latitude, item.longitude);
+      const crimeType = item.flag?.[0] || 'Unknown';
       this.recentLocationAddresses.push({
         address: address || `${item.latitude}, ${item.longitude}`,
-        lat: item.latitude, // latitude of the location
-        lng: item.longitude, // longitude of the location
+        lat: item.latitude,
+        lng: item.longitude,
         crime: crimeType
       });
-      crimeSet.add(crimeType); // to add the crime type to the set
+      crimeSet.add(crimeType);
     }
 
     this.crimeTypes = Array.from(crimeSet).sort();
@@ -405,23 +398,34 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
   }
 
   filterRecentLocations(): void {
-    this.filteredLocationAddresses = this.selectedCrimeType === 'All' // to show all recent locations
-      ? this.recentLocationAddresses // to show all recent locations
-      : this.recentLocationAddresses.filter(loc => loc.crime === this.selectedCrimeType); // to filter by selected crime type
+    this.filteredLocationAddresses =
+      this.selectedCrimeType === 'All'
+        ? this.recentLocationAddresses
+        : this.recentLocationAddresses.filter(loc => loc.crime === this.selectedCrimeType);
+  }
+
+  extractBarangayFromAddress(address: string): string {
+    const patterns = [/Brgy\.?\s*([A-Za-z0-9\s]+)/i, /Barangay\s*([A-Za-z0-9\s]+)/i];
+    for (const pattern of patterns) {
+      const match = address.match(pattern);
+      if (match) return `Barangay ${match[1].trim()}`;
+    }
+    const parts = address.split(',');
+    return parts.length > 0 ? parts[0].trim() : 'Unknown';
   }
 
   getAddressFromCoordinates(lat: number, lng: number): Promise<string> {
     const apiKey = environment.firebase.googleMapsApiKey;
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`; // to get address from coordinates using Google Maps Geocoding API
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 
-    return firstValueFrom( // to convert observable to promise
-      this.http.get<any>(url).pipe( // to make HTTP GET request to the Geocoding API
-        map((response) => { // to process the response from the API
-          if (response.status === 'OK' && Array.isArray(response.results) && response.results.length > 0) { // check if the response is OK and has results
-            const best = response.results.find((r: any) => typeof r.formatted_address === 'string'); // to find the best formatted address
-            return best?.formatted_address || `${lat}, ${lng}`; // return the formatted address or coordinates if not found
+    return firstValueFrom(
+      this.http.get<any>(url).pipe(
+        map((response) => {
+          if (response.status === 'OK' && Array.isArray(response.results) && response.results.length > 0) {
+            const best = response.results.find((r: any) => typeof r.formatted_address === 'string');
+            return best?.formatted_address || `${lat}, ${lng}`;
           }
-          return 'Unknown Location'; // return 'Unknown Location' if no address found
+          return 'Unknown Location';
         }),
         catchError(err => {
           console.error('Geocoding failed:', err);
@@ -431,9 +435,11 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     );
   }
 
-  getGoogleMapsLink(lat: number, lng: number): string { // to generate Google Maps link for the coordinates
+  getGoogleMapsLink(lat: number, lng: number): string {
     return `https://www.google.com/maps?q=${lat},${lng}`;
   }
+
+  // ─── Export PDF ───────────────────────────────────────────────────────────
 
   exportPDF(): void {
     if (!this.firebaseData || this.firebaseData.length === 0) {
@@ -442,76 +448,119 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
     }
 
     const monthInput = this.selectedExportMonth;
+    const userRole   = (this.role ?? '').toLowerCase();
 
-    // Filter by role
-    const userRole = (this.role ?? '').toLowerCase();
+    // Step 1: Filter by role
     let filteredReports = this.firebaseData.filter(item => {
-      const flags = Array.isArray(item.flag) ? item.flag : [item.flag || 'Unknown'];
       if (userRole === 'sa') return true;
-      return flags.some((flag: string) => flag?.toLowerCase() === userRole);
+      const flags = Array.isArray(item.flag) ? item.flag : [item.flag || ''];
+      return flags.some((f: string) => (f ?? '').toLowerCase() === userRole);
     });
 
-    // Filter by month
+    // Step 2: Filter by selected export month using parseTimestamp
     if (monthInput !== 'All') {
+      // months[0] = 'All', so Jan is at index 1 → JS month index 0
+      const monthIndex = this.months.findIndex(m => m.value === monthInput) - 1;
+
       filteredReports = filteredReports.filter(r => {
-        if (!r.timestamp) return false;
-        const date = new Date(r.timestamp);
-        const monthShort = date.toLocaleString('en-US', { month: 'short' });
-        return monthShort === monthInput;
+        const date = this.parseTimestamp(r.timestamp);
+        if (!date) return false;
+        return date.getMonth() === monthIndex;
       });
     }
 
     if (filteredReports.length === 0) {
-      alert(`No reports found for: ${monthInput}`);
+      alert(`No reports found for: ${monthInput === 'All' ? 'any month' : monthInput}`);
       return;
     }
 
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const monthLabel = this.months.find(m => m.value === monthInput)?.label ?? monthInput;
+
+    const doc       = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 51, 102);
-    doc.text(`ResqAlert Dashboard Data (${monthInput})`, pageWidth / 2, 40, { align: 'center' });
+    doc.text(`ResqAlert Dashboard Report — ${monthLabel}`, pageWidth / 2, 40, { align: 'center' });
 
     autoTable(doc, {
       head: [['ID', 'Crime Type', 'Status', 'Timestamp', 'Location']],
-      body: filteredReports.map(r => [
-        r.id,
-        Array.isArray(r.flag) ? r.flag.join(', ') : r.flag || 'Unknown',
-        r.status || 'N/A',
-        r.timestamp ? new Date(r.timestamp).toLocaleString() : 'N/A',
-        r.latitude && r.longitude ? `${r.latitude}, ${r.longitude}` : 'N/A'
-      ]),
+      body: filteredReports.map(r => {
+        const parsedDate = this.parseTimestamp(r.timestamp);
+        return [
+          r.id ?? 'N/A',
+          Array.isArray(r.flag) ? r.flag.join(', ') : r.flag || 'Unknown',
+          r.status || 'N/A',
+          parsedDate ? parsedDate.toLocaleString() : 'N/A',
+          r.latitude && r.longitude ? `${r.latitude}, ${r.longitude}` : 'N/A'
+        ];
+      }),
       startY: 70,
       theme: 'grid'
     });
 
     const now = new Date();
     doc.setFontSize(10);
-    doc.text(`Generated on: ${now.toLocaleString()}`,
+    doc.setTextColor(100);
+    doc.text(
+      `Generated on: ${now.toLocaleString()}`,
       pageWidth - 40,
       doc.internal.pageSize.getHeight() - 20,
       { align: 'right' }
     );
 
-    doc.save(`resqalert_data_${monthInput}.pdf`);
+    doc.save(`resqalert_report_${monthInput}.pdf`);
   }
 
+  // ─── Dialogs / Auth ───────────────────────────────────────────────────────
 
-  updateSelectedMonth() {
+  openFeedbackDialog(): void {
+    const dialogRef = this.dialog.open(FeedbackDialog, {
+      width: '400px',
+      data: { role: this.role }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.message) {
+        const ticket  = `#${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 8)}`;
+        const payload = {
+          message:     result.message,
+          submittedBy: this.role,
+          timestamp:   new Date().toISOString(),
+          ticket
+        };
+
+        this.http.post(
+          'https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json',
+          payload
+        ).subscribe(
+          () => alert(`✅ Feedback submitted with Ticket ${ticket}`),
+          () => alert('❌ Failed to submit feedback')
+        );
+      }
+    });
+  }
+
+  logout(): void {
+    this.router.navigate(['/login']);
+  }
+
+  // ─── Month filter for chart ───────────────────────────────────────────────
+
+  updateSelectedMonth(): void {
     if (this.selectedMonth === 'All') {
-      this.generateMonthlyLineChart(); // reset to normal
+      this.generateMonthlyLineChart();
       return;
     }
 
-    const filteredLabels: string[] = [];
-    const filteredValues: number[] = [];
+    const filteredLabels: string[]  = [];
+    const filteredValues: number[]  = [];
 
     this.lineChartData.labels?.forEach((label, index) => {
-      if (label.startsWith(this.selectedMonth)) {
-        filteredLabels.push(label);
-        filteredValues.push(this.lineChartData.datasets[0].data[index]);
+      if ((label as string).startsWith(this.selectedMonth)) {
+        filteredLabels.push(label as string);
+        filteredValues.push(this.lineChartData.datasets[0].data[index] as number);
       }
     });
 
@@ -527,5 +576,4 @@ export class Dashboard implements OnInit, AfterViewInit { // to implement OnInit
       }]
     };
   }
-
 }

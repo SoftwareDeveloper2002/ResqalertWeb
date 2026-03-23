@@ -1,0 +1,114 @@
+<!-- Sidebar -->
+<aside class="sticky top-0 h-screen flex flex-col w-64 bg-white border-r border-pink-100 px-4 py-6 flex-shrink-0 overflow-hidden">
+
+  <!-- Ambient glow top-left -->
+  <div class="pointer-events-none absolute top-0 left-0 w-44 h-44 rounded-br-full"
+       style="background: radial-gradient(ellipse at top left, rgba(236,72,153,0.07), transparent 70%);">
+  </div>
+
+  <!-- Section label -->
+  <span class="block px-3 pt-5 pb-2 text-[9.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+    Main Menu
+  </span>
+
+  <!-- Navigation -->
+  <nav class="flex flex-col gap-0.5 flex-1">
+
+    <!-- Dashboard -->
+    <a routerLink="/dashboard"
+       routerLinkActive="!text-pink-600 !bg-pink-50 !pl-3.5"
+       class="group relative flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-500 text-sm font-medium
+              transition-all duration-150 hover:bg-pink-50/70 hover:text-slate-700 hover:pl-3.5 no-underline">
+
+      <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-pink-500 opacity-0
+                   [a.active_>_&]:opacity-100 transition-opacity duration-150"></span>
+
+      <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-transparent
+                   group-hover:bg-pink-100/60 transition-colors duration-150 text-slate-400 group-hover:text-pink-500">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </span>
+      <span>Dashboard</span>
+      <span class="ml-auto w-1.5 h-1.5 rounded-full bg-pink-500 opacity-0 scale-50 transition-all duration-150
+                   [a.active_>_&]:opacity-100 [a.active_>_&]:scale-100"></span>
+    </a>
+
+    <!-- Reports -->
+    <a routerLink="/reports"
+       routerLinkActive="!text-pink-600 !bg-pink-50 !pl-3.5"
+       class="group relative flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-500 text-sm font-medium
+              transition-all duration-150 hover:bg-pink-50/70 hover:text-slate-700 hover:pl-3.5 no-underline">
+
+      <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-pink-500 opacity-0
+                   [a.active_>_&]:opacity-100 transition-opacity duration-150"></span>
+
+      <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-transparent
+                   group-hover:bg-pink-100/60 transition-colors duration-150 text-slate-400 group-hover:text-pink-500">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </span>
+      <span>Reports</span>
+      <span class="ml-auto w-1.5 h-1.5 rounded-full bg-pink-500 opacity-0 scale-50 transition-all duration-150
+                   [a.active_>_&]:opacity-100 [a.active_>_&]:scale-100"></span>
+    </a>
+
+    <!-- Feedback (SA only) -->
+    <a *ngIf="role === 'SA'"
+       routerLink="/feedback"
+       routerLinkActive="!text-pink-600 !bg-pink-50 !pl-3.5"
+       class="group relative flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-500 text-sm font-medium
+              transition-all duration-150 hover:bg-pink-50/70 hover:text-slate-700 hover:pl-3.5 no-underline">
+
+      <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-pink-500 opacity-0
+                   [a.active_>_&]:opacity-100 transition-opacity duration-150"></span>
+
+      <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-transparent
+                   group-hover:bg-pink-100/60 transition-colors duration-150 text-slate-400 group-hover:text-pink-500">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </span>
+      <span>Feedback</span>
+      <span class="ml-auto w-1.5 h-1.5 rounded-full bg-pink-500 opacity-0 scale-50 transition-all duration-150
+                   [a.active_>_&]:opacity-100 [a.active_>_&]:scale-100"></span>
+    </a>
+
+    <!-- Mobile App (SA only) -->
+    <a *ngIf="role === 'SA'"
+       routerLink="/app"
+       routerLinkActive="!text-pink-600 !bg-pink-50 !pl-3.5"
+       class="group relative flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-slate-500 text-sm font-medium
+              transition-all duration-150 hover:bg-pink-50/70 hover:text-slate-700 hover:pl-3.5 no-underline">
+
+      <span class="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-pink-500 opacity-0
+                   [a.active_>_&]:opacity-100 transition-opacity duration-150"></span>
+
+      <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-transparent
+                   group-hover:bg-pink-100/60 transition-colors duration-150 text-slate-400 group-hover:text-pink-500">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+        </svg>
+      </span>
+      <span>Mobile App</span>
+      <span class="ml-auto w-1.5 h-1.5 rounded-full bg-pink-500 opacity-0 scale-50 transition-all duration-150
+                   [a.active_>_&]:opacity-100 [a.active_>_&]:scale-100"></span>
+    </a>
+
+  </nav>
+
+  <!-- Footer -->
+  <div class="flex flex-col gap-3 pt-2">
+    <div class="h-px bg-pink-100 mx-2"></div>
+    <div class="flex items-center gap-2.5 px-3">
+      <span class="relative flex h-2 w-2 flex-shrink-0">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-50"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+      </span>
+      <span class="text-[11px] font-medium text-slate-400">System Online</span>
+    </div>
+  </div>
+
+</aside>

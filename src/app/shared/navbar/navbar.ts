@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FeedbackDialog } from '../../feedback-dialog/feedback-dialog';
 import { ChangeAccountDialog } from '../../change-account-dialog/change-account-dialog';
@@ -9,7 +10,7 @@ import { db } from '../../firebase';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, FeedbackDialog, ChangeAccountDialog],
+  imports: [CommonModule, RouterLink, MatDialogModule, FeedbackDialog, ChangeAccountDialog],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.scss']
 })
@@ -24,32 +25,30 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   showNewReportNotification: boolean = false;
   newReportMessage: string = '';
+  dropdownOpen: boolean = false;
+
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
     let initialLoad = true;
 
-    document.addEventListener("click", () => {
-      const audio = document.getElementById("alert-audio") as HTMLAudioElement;
+    // Unlock audio on first user interaction
+    document.addEventListener('click', () => {
+      const audio = document.getElementById('alert-audio') as HTMLAudioElement;
       if (audio) {
         audio.play().then(() => audio.pause());
       }
     }, { once: true });
 
+    // Listen for new Firebase reports
     this.listener = onChildAdded(this.reportsRef, (snapshot) => {
-      if (!snapshot.exists()) return;
-      if (initialLoad) return;
+      if (!snapshot.exists() || initialLoad) return;
 
       const reportId = snapshot.key;
-      const report = snapshot.val();
+      const report   = snapshot.val();
 
-      if (!reportId || !report) {
-        console.warn("Report ID or data missing — skipping.");
-        return;
-      }
-
-      // 🚨 Skip alerts and SMS for postponed or resolved reports
-      if (report.status === 'RESCUED' || report.status === 'DURING') {
-        console.log(`Report ${reportId} is ${report.status} — skipping alert and SMS.`);
+      if (!reportId) {
+        console.warn('Report ID is null — skipping SMS trigger.');
         return;
       }
 
@@ -58,9 +57,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.sendSmsNotification(reportId);
     });
 
-    setTimeout(() => {
-      initialLoad = false;
-    }, 1000);
+    // Ignore pre-existing children on first load
+    setTimeout(() => { initialLoad = false; }, 1000);
   }
 
   ngOnDestroy(): void {
@@ -69,48 +67,65 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  triggerAlert() {
-    this.showNewReportNotification = true;
+  // ─── Dropdown ─────────────────────────────────────────────────────────────
 
-    const audio = document.getElementById("alert-audio") as HTMLAudioElement;
+  toggleDropdown(): void {
+    this.dropdownOpen = !this.dropdownOpen;
+  }
+
+  // Close dropdown when clicking outside the navbar
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('app-navbar')) {
+      this.dropdownOpen = false;
+    }
+  }
+
+  // ─── Alert ────────────────────────────────────────────────────────────────
+
+  triggerAlert(): void {
+    this.showNewReportNotification = true;
+    const audio = document.getElementById('alert-audio') as HTMLAudioElement;
     if (audio) {
       audio.play().catch(err => {
-        console.warn("Autoplay blocked — waiting for user action:", err);
+        console.warn('Autoplay blocked — waiting for user action:', err);
       });
     }
   }
 
-  dismissNotification() {
+  dismissNotification(): void {
     this.showNewReportNotification = false;
-
-    const audio = document.getElementById("alert-audio") as HTMLAudioElement;
+    const audio = document.getElementById('alert-audio') as HTMLAudioElement;
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
     }
   }
 
+  // ─── SMS ──────────────────────────────────────────────────────────────────
+
   async sendSmsNotification(reportId: string): Promise<void> {
     try {
-      const response = await fetch('https://resqalert.soltryxsolutions.com/api/sms/send-sms', {
+      const response = await fetch('https://resqalertwebbackend-1.onrender.com/api/sms/send-sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ report_id: reportId })
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('SMS sent:', result);
-      } else {
+      if (!response.ok) {
         const errorText = await response.text();
-        console.warn('SMS failed:', errorText);
+        console.error('SMS notification failed:', errorText);
       }
     } catch (err) {
-      console.error('SMS error:', err);
+      console.error('SMS request error:', err);
     }
   }
 
+  // ─── Auth / Dialogs ───────────────────────────────────────────────────────
+
   logout(): void {
+    this.dropdownOpen = false;
     localStorage.clear();
     this.logoutEvent.emit();
   }
@@ -120,8 +135,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   openFeedbackDialog(): void {
+    this.dropdownOpen = false;
+
     if (!this.canAccessFeedback()) {
-      alert('❌ You are not allowed to access the feedback form.');
+      alert('You are not allowed to access the feedback form.');
       return;
     }
 
@@ -131,30 +148,28 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result?.message) {
-        const ticket = `#${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 8)}`;
-        const payload = {
-          message: result.message,
-          submittedBy: this.role,
-          timestamp: new Date().toISOString(),
-          ticket: ticket
-        };
+      if (!result?.message) return;
 
-        fetch('https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json', {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        })
-          .then(() => {
-            alert(`✅ Feedback submitted with Ticket ${ticket}`);
-          })
-          .catch(() => {
-            alert('❌ Failed to submit feedback');
-          });
-      }
+      const ticket  = `#${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 8)}`;
+      const payload = {
+        message:     result.message,
+        submittedBy: this.role,
+        timestamp:   new Date().toISOString(),
+        ticket
+      };
+
+      fetch('https://resqalert-22692-default-rtdb.asia-southeast1.firebasedatabase.app/feedbacks.json', {
+        method: 'POST',
+        body:   JSON.stringify(payload)
+      })
+        .then(() => alert(`Feedback submitted — Ticket ${ticket}`))
+        .catch(() => alert('Failed to submit feedback'));
     });
   }
 
   openAccountDialog(): void {
+    this.dropdownOpen = false;
+
     const dialogRef = this.dialog.open(ChangeAccountDialog, {
       width: '400px',
       data: { role: this.role }

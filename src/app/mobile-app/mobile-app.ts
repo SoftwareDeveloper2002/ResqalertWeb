@@ -6,6 +6,7 @@ import { RouterLink } from '@angular/router';
 import { ref as dbRef, get, set } from 'firebase/database';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
+import { SidebarComponent } from '../shared/sidebar/sidebar';
 
 interface AppVersion {
   version: string;
@@ -16,7 +17,7 @@ interface AppVersion {
 @Component({
   selector: 'app-mobile-app',
   standalone: true,
-  imports: [NavbarComponent, FormsModule, CommonModule, RouterLink],
+  imports: [NavbarComponent, FormsModule, CommonModule, RouterLink, SidebarComponent],
   templateUrl: './mobile-app.html',
   styleUrls: ['./mobile-app.scss'],
   providers: [DatePipe]
