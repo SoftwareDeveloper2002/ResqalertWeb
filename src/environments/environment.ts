@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  backendUrl: 'http://127.0.0.1:8000',
+  backendUrl: 'https://resqalert.soltryxsolutions.com',
   // backendUrl: 'http://127.0.0.1:7000',
   // https://resqalert.soltryxsolutions.com
   // backendUrl https://commit-asthma-teach-ian.trycloudflare.com
